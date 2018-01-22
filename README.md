@@ -1,2 +1,2 @@
 # weco
-WeCompose is a very fun musik making app under development :)
+WeCompose is a very fun music making app under development :)
