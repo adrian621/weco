@@ -6,7 +6,7 @@ How to use an emulator from commandline: https://stuff.mit.edu/afs/sipb/project/
 
 ## Database
 Guide for installation/running of MongoDB Community Edition: https://docs.mongodb.com/manual/installation/
-### Database population
+#### Database population
 The python script 'setup.py' populates the database 'test' with some dummy documents in some collections
 
 'PyMongo' has to be installed:
