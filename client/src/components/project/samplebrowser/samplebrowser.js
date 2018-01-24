@@ -5,7 +5,7 @@ export default class SampleBrowser extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text>Sample Browser!!</Text>
+        <Text>Sample Browser!</Text>
       </View>
     );
   }
