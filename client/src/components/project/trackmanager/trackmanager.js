@@ -57,8 +57,7 @@ export default class TrackManager extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'white',
+    flex: 1
   },
   flatListStyle:{
     height: '100%'

@@ -7,67 +7,26 @@ import {
     TouchableWithoutFeedback
 } from 'react-native';
 
-export default class SamplBox extends Component {
+export default class SampleBox extends Component {
 
   constructor(){
       super();
-
-      this.state = {
-          pan: new Animated.ValueXY()
-      };
   }
 
   componentWillMount(){
+  }
 
-    // Add a listener for the delta value change
-    this._val = { x:0, y:0 }
-    this.state.pan.addListener((value) => this._val = value);
-
-    // Initialize PanResponder with move handling
-    this.panResponder = PanResponder.create({
-      onMoveShouldSetResponderCapture: () => true,
-      onMoveShouldSetPanResponderCapture: () => true,
-      onShouldBlockNativeResponder: () => true,
-
-      onPanResponderGrant: (e, gestureState) => {
-        this.state.pan.setOffset({x: this.state.pan.x._value, y: this.state.pan.y._value});
-        this.state.pan.setValue({ x:0, y:0});
-        this.props.onMove();
-      },
-
-      /*
-      onStartShouldSetPanResponder: (e, gesture) => true,
-      */
-      //pre
-      onPanResponderMove: (e, gestureState) => {
-        Animated.event([null, {
-          dx: this.state.pan.x,
-          dy: this.state.pan.y,
-        }])(e, gestureState);
-      },
-
-      onPanResponderRelease: (e, {vx, vy}) => {
-        this.state.pan.flattenOffset();
-        this.setState({respond: false})
-        }
-    });
+  onPressButton = () => {
+    this.props.onMove(this.props.name);
   }
 
   render(){
-    const panStyle = {
-        transform: this.state.pan.getTranslateTransform()
-    }
-
     return (
-      <Animated.View
-      {...this.panResponder.panHandlers}
-      style={[panStyle, styles.sampleBox]}
-      >
-
-        <Animated.Text style={styles.sampleText}>{this.props.name}</Animated.Text>
-
-      </Animated.View>
-
+      <TouchableWithoutFeedback onPressIn={this.onPressButton}>
+        <View style={[styles.sampleBox]}>
+          <Animated.Text style={styles.sampleText}>{this.props.name}</Animated.Text>
+        </View>
+      </TouchableWithoutFeedback>
     );
 
   }
