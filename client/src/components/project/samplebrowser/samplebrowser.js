@@ -58,22 +58,28 @@ export default class SampleBrowser extends Component {
         {key:file}
       );
     }
-    console.log(files)
+
     return <FlatList
               data={files}
-              renderItem={({item}) => <SampleBox onMove={this.handleBox} name={item.key}></SampleBox>}
+              renderItem={({item}) => <SampleBox onMove={this.handleSampleMove} name={item.key}></SampleBox>}
             />;
   }
 
-  handleBox() {
-    console.log("MOOOVE")
+  display_movingsample(){
+
+  }
+
+  handleSampleMove = (sample) => {
+    this.props.onSampleMove(sample);
   }
 
   render() {
     let samples = this.display_samples();
+    let movingsample = this.display_movingsample();
     return (
       <View style={styles.container}>
         <Button onPress={()=>this.read_files()} title="Load!"/>
+        {/* {movingsample} */}
         {samples}
       </View>
     );
@@ -83,6 +89,8 @@ export default class SampleBrowser extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#d9d9d9'
+    backgroundColor: '#d9d9d9',
+    borderRightWidth:2,
+    borderColor: 'black',
   }
 });
