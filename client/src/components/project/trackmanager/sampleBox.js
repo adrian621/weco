@@ -50,10 +50,11 @@ componentWillMount(){
             transform: this.state.pan.getTranslateTransform()
         }
         return (
-            <Animated.View
-            {...this.panResponder.panHandlers}
-            style={[panStyle, styles.sampleBox]}
-            />
+          <Animated.View
+          {...this.panResponder.panHandlers}
+          style={[panStyle, styles.sampleBox]}
+          ><Animated.Text>oi</Animated.Text>
+          </Animated.View>
 
         );
 
