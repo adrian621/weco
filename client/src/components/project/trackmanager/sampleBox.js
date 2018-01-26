@@ -6,7 +6,7 @@ import {
     Animated,
 } from 'react-native';
 
-export default class SamplBox extends Component {
+export default class SampleBox extends Component {
 
 constructor(){
     super();
@@ -64,7 +64,7 @@ componentWillMount(){
 let styles = StyleSheet.create({
     sampleBox: {
         backgroundColor: "skyblue",
-        width: 40,
-        height: 20
+        width: '15%',
+        height: '10%'
     }
 })
