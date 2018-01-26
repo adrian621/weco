@@ -89,6 +89,8 @@ export default class SampleBrowser extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#d9d9d9'
+    backgroundColor: '#d9d9d9',
+    borderRightWidth:2,
+    borderColor: 'black',
   }
 });

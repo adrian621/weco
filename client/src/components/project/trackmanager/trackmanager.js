@@ -5,7 +5,7 @@ import Track from './track';
 import NewTrackButton from './newTrackButton';
 
 export default class TrackManager extends Component {
-  
+
   constructor(){
     super();
 
@@ -21,8 +21,8 @@ export default class TrackManager extends Component {
     tracks.push({'trackId': tracks.length});
     this.setState({tracks: tracks});
   }
-    
-  
+
+
   display_tracks(){
     tracks = []
     for(let track of this.state.tracks){
@@ -35,21 +35,21 @@ export default class TrackManager extends Component {
     />
 
   }
-  
-  
+
+
   render() {
-   
+
     let tracks = this.display_tracks();
     console.log("asdasdasd", tracks);
 
     return (
       <View style={styles.container}>
-          
+
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
         {tracks}
-      <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>      
-     
-     
+      <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
+
+
       </View>
     );
   }
@@ -57,8 +57,7 @@ export default class TrackManager extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'white',
+    flex: 1
   },
   flatListStyle:{
     height: '100%'
