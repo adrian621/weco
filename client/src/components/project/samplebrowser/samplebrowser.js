@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, FlatList, StyleSheet, Text, View } from 'react-native';
+import SampleBox from './samplebox'
 
 let RNFS = require('react-native-fs')
 
@@ -51,18 +52,25 @@ export default class SampleBrowser extends Component {
 
   display_samples(){
     files = []
+
     for(let file of this.state.files){
-      files.push({key:file});
+      files.push(
+        {key:file}
+      );
     }
-    console.log("ey",files)
+    console.log(files)
     return <FlatList
               data={files}
-              renderItem={({item}) => <Text>{item.key}</Text>}
-            />
+              renderItem={({item}) => <SampleBox onMove={this.handleBox} name={item.key}></SampleBox>}
+            />;
   }
+
+  handleBox() {
+    console.log("MOOOVE")
+  }
+
   render() {
     let samples = this.display_samples();
-    console.log(samples)
     return (
       <View style={styles.container}>
         <Button onPress={()=>this.read_files()} title="Load!"/>
@@ -75,7 +83,6 @@ export default class SampleBrowser extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#d9d9d9',
-    height: '90%'
+    backgroundColor: '#d9d9d9'
   }
 });
