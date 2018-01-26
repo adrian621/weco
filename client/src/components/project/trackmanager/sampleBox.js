@@ -16,7 +16,7 @@ constructor(){
     };
 }
 
-componentWillMount(){   
+componentWillMount(){
     // Add a listener for the delta value change
     this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);
@@ -25,11 +25,10 @@ componentWillMount(){
     this.panResponder = PanResponder.create({
         onMoveShouldSetResponderCapture: () => true,
         onMoveShouldSetPanResponderCapture: () => true,
-        
+
         onPanResponderGrant: (e, gestureState) => {
             this.state.pan.setOffset({x: this.state.pan.x._value, y: this.state.pan.y._value});
             this.state.pan.setValue({ x:0, y:0})
-           
         },
 
         /*
@@ -55,7 +54,7 @@ componentWillMount(){
             {...this.panResponder.panHandlers}
             style={[panStyle, styles.sampleBox]}
             />
-                        
+
         );
 
         }
