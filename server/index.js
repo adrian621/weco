@@ -35,7 +35,6 @@ io.on('connection', function (socket) {
   dbHandler.tracksFromProjectID(db, "project1", (tracks) => {
     dbHandler.reconstructRawTracks(tracks, (res) => {
       socket.emit('on-connect', res);
-      console.log('Sent tracks to new user!');
     });
   });
 
@@ -44,7 +43,9 @@ io.on('connection', function (socket) {
     more information on what happends on the server/database side when triggered.
   */
   socket.on('new-track', (trackInfo) => {
-    dbHandler.addNewTrack(db, trackInfo, socket.id);
+    dbHandler.addNewTrack(db, trackInfo, socket.id, (id) => {
+      socket.broadcast.emit('get-new-track', id);
+    });
   });
 
   /*
@@ -54,7 +55,6 @@ io.on('connection', function (socket) {
     THIS FUNCTION IS ONLY FOR SERVER -> CLIENT COMMUNICATION TESTING!!!
   */
   socket.on('get-num-tracks', (projectId) => {
-    console.log("A client is asking for number of tracks?");
     dbHandler.numOfTracks(db, projectId, (val) => {
       socket.emit('num-of-tracks', {number: val})
     });

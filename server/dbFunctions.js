@@ -67,7 +67,7 @@ function setUpDB(db) {
     VERY ALPHA! Everything in this function is mainly for checking that the
     communication between the client, server and database works!
   */
-  function addNewTrack(db, trackInfo, id) {
+  function addNewTrack(db, trackInfo, id, callback) {
     var projectID = "project" + trackInfo.projectID.toString();
     var trackID = trackInfo.trackID.toString();
 
@@ -75,7 +75,7 @@ function setUpDB(db) {
 
     dbt.collection(projectID).insertOne({info: "new track", trackNum: trackID}, function(err, res) {
       if(err) throw err;
-      console.log("New track (TrackID ", trackID, " | ProjectID ", projectID, ") was added by userId: ", id);
+      callback(trackID);
     })
   }
 
@@ -98,7 +98,6 @@ function setUpDB(db) {
     var dbt = db.db("tracks");
 
     dbt.collection(projectID).count(query, function(err, res) {
-      console.log(res, " numbers of tracks.");
       //return res;
       callback(res);
     });
@@ -116,7 +115,6 @@ function setUpDB(db) {
 
     dbt.collection(projectId).find({}).toArray(function(err, res) {
       if (err) throw err;
-      console.log(res);
       callback(res);
     })
   }
@@ -133,7 +131,6 @@ function setUpDB(db) {
     for(var i=0; i<rawTracks.length; i++) {
       recTracks[i] = {trackId: i};
     }
-    console.log("***********************", recTracks);
     callback(recTracks);
   }
 

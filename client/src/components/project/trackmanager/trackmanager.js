@@ -23,6 +23,16 @@ export default class TrackManager extends Component {
       //alert(tracks.length);
       this.setState({tracks: res});
     });
+
+    this.socket.on('get-new-track', (res) => {
+      //alert(tracks.length);
+      var tracks = this.state.tracks;
+      
+      if(res != tracks.length-1) {
+        tracks.push({'trackId': res});
+        this.setState({tracks: tracks});
+      }
+    });
   }
 
   addNewTrack(){
@@ -33,6 +43,7 @@ export default class TrackManager extends Component {
       this.socket.emit('new-track', {trackID: trackId, projectID: 1});
     });
   }
+
 
 
   display_tracks(){
