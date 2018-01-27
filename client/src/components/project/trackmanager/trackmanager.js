@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, FlatList } from 'react-native';
 import SampleBox from './sampleBox';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
+import SocketIOClient from 'socket.io-client';
 
 export default class TrackManager extends Component {
 
@@ -12,14 +13,25 @@ export default class TrackManager extends Component {
     this.state = {
         tracks: []
     };
+
+    this.socket = SocketIOClient('http://10.0.2.2:3000');
+
     this.addNewTrack = this.addNewTrack.bind(this);
     this.display_tracks = this.display_tracks.bind(this);
+
+    this.socket.on('on-connect', (res) => {
+      //alert(tracks.length);
+      this.setState({tracks: res});
+    });
   }
 
   addNewTrack(){
     var tracks = this.state.tracks;
-    tracks.push({'trackId': tracks.length});
-    this.setState({tracks: tracks});
+    var trackId = tracks.length;
+    tracks.push({'trackId': trackId});
+    this.setState({tracks: tracks}, () => {
+      this.socket.emit('new-track', {trackID: trackId, projectID: 1});
+    });
   }
 
 

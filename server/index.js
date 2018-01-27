@@ -5,6 +5,7 @@ var mongoUtil = require('./mongoUtil');
 var dbHandler = require('./dbFunctions');
 var db;
 
+var clients = {};
 /*
   Connect and store an open connection to the mongoDB aswell as running the
   node.js server on 'http://localhost:3000'.
@@ -28,6 +29,15 @@ mongoUtil.connectToServer(function(err) {
 */
 io.on('connection', function (socket) {
   console.log('User connected!');
+  /*
+    Send all tracks to a newly connected client.
+  */
+  dbHandler.tracksFromProjectID(db, "project1", (tracks) => {
+    dbHandler.reconstructRawTracks(tracks, (res) => {
+      socket.emit('on-connect', res);
+      console.log('Sent tracks to new user!');
+    });
+  });
 
   /*
     Event handler for 'new-track', see 'addNewTrack' documentation for

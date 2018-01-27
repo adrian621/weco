@@ -46,7 +46,16 @@ function setUpDB(db) {
         }
 
         else {
+          dbt.createCollection("project1", function(err, res) {
+            if (err) throw err;
+            console.log("Collection 'tracks.project1' created.");
 
+            var track_info = { info: "new track", trackNum: "0"};
+            dbt.collection("project1").insertOne(track_info, function(err,res) {
+              if (err) throw err;
+              console.log("Project1.track info inserted.");
+            });
+          });
         }
       })
   }
@@ -82,6 +91,8 @@ function setUpDB(db) {
     VERY ALPHA, MAINLY USED FOR SERVER -> CLIENT COMMUNICATION TESTING!
   */
   function numOfTracks(db, info, callback) {
+    //tracksFromProjectID(db, "project1");  // testy-testy
+
     var query = {trackNum: "1"};
     var projectID = "project1";   // use 'info.projectId' here in the future.
     var dbt = db.db("tracks");
@@ -93,4 +104,37 @@ function setUpDB(db) {
     });
   }
 
-  module.exports = {setUpDB, addNewTrack, numOfTracks}
+  /*
+    Returns an array of all tracks that are in the collection of
+    'projectId' in the database 'tracks' to a callback function. The callback
+    function (for now) is 'reconstructRawTracks' so that the elements in
+    the array is of the right JSON structure. ({trackId: id}).
+  */
+  function tracksFromProjectID(db, projectId, callback) {
+    //var query = {projectID: projID};
+    var dbt = db.db("tracks");
+
+    dbt.collection(projectId).find({}).toArray(function(err, res) {
+      if (err) throw err;
+      console.log(res);
+      callback(res);
+    })
+  }
+
+  /*
+    Returns a reconstructed array of JSON 'track' objects, from
+        {_id: id, info: _info, trackNum: _trackNum},  to
+        {trackId: id}
+    to a callback function. The callback function (for now) is a socket.emit
+    call that sends all tracks to a client when it connects.
+  */
+  function reconstructRawTracks(rawTracks, callback) {
+    var recTracks = new Array(rawTracks.length);
+    for(var i=0; i<rawTracks.length; i++) {
+      recTracks[i] = {trackId: i};
+    }
+    console.log("***********************", recTracks);
+    callback(recTracks);
+  }
+
+  module.exports = {setUpDB, addNewTrack, numOfTracks, tracksFromProjectID, reconstructRawTracks}
