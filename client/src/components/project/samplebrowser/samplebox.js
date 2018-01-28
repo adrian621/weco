@@ -19,9 +19,9 @@ export default class SampleBox extends Component {
   }
 
   onPressOut = () => {
-    
     console.log("out")
   }
+
   render(){
     return (
       <TouchableWithoutFeedback delayPressIn={400} onPressIn={this.onPressIn} onPressOut={this.onPressOut}>
