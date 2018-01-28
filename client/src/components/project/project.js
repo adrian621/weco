@@ -55,26 +55,28 @@ export default class App extends React.Component {
     this.setState({movingsample: sample});
   }
 
-  resetMovingSample() {
-    this.setState({movingsample: ''});
+  handleSampleDrop = () => {
+    //todo: Handle track drop if movingsample released on a track!
+
+    this.setState({movingsample: []});
   }
 
   display_movingsample() {
     const panStyle = {
         transform: this.state.pan.getTranslateTransform()
     }
-    if (this.state.movingsample==''){
-      return
+    if (this.state.movingsample.length==0){
+      return [];
     }
-    return <MovingSampleBox onMove={()=>{}} name={this.state.movingsample}></MovingSampleBox>
+    return <MovingSampleBox onRelease={this.handleSampleDrop} onMove={()=>{}} name={this.state.movingsample}></MovingSampleBox>
   }
 
   render() {
-    console.log("->",this.state.movingsample)
+
     let movingsample = this.display_movingsample();
 
     return (
-      <Animated.View style={styles.container}>
+      <View style={styles.container}>
 
         <View style={{flex: 2}}>
           <SampleBrowser onSampleMove={this.handleSampleMove}></SampleBrowser>
@@ -84,7 +86,7 @@ export default class App extends React.Component {
             <TrackManager></TrackManager>
         </View>
         {movingsample}
-      </Animated.View>
+      </View>
     );
   }
 }

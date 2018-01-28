@@ -11,18 +11,20 @@ export default class SampleBox extends Component {
 
   constructor(){
       super();
+
   }
 
-  componentWillMount(){
-  }
-
-  onPressButton = () => {
+  onPressIn = () => {
     this.props.onMove(this.props.name);
   }
 
+  onPressOut = () => {
+    
+    console.log("out")
+  }
   render(){
     return (
-      <TouchableWithoutFeedback onPressIn={this.onPressButton}>
+      <TouchableWithoutFeedback delayPressIn={400} onPressIn={this.onPressIn} onPressOut={this.onPressOut}>
         <View style={[styles.sampleBox]}>
           <Animated.Text style={styles.sampleText}>{this.props.name}</Animated.Text>
         </View>
