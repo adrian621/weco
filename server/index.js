@@ -3,6 +3,7 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var mongoUtil = require('./mongoUtil');
 var dbHandler = require('./dbFunctions');
+var jsonParser = require('./jsonParser');
 var db;
 
 var clients = {};
@@ -31,20 +32,35 @@ io.on('connection', function (socket) {
   console.log('User connected!');
   /*
     Send all tracks to a newly connected client.
+
+    CHANGE WHAT 'ProjectX' IS CALLED WHEN ROOMS ARE ADDED
   */
   dbHandler.tracksFromProjectID(db, "project1", (tracks) => {
-    dbHandler.reconstructRawTracks(tracks, (res) => {
+    jsonParser.reconstructRawTracks(tracks, (res) => {
       socket.emit('on-connect', res);
     });
   });
 
   /*
     Event handler for 'new-track', see 'addNewTrack' documentation for
-    more information on what happends on the server/database side when triggered.
+    more information on what happens on the server/database side when triggered.
   */
   socket.on('new-track', (trackInfo) => {
-    dbHandler.addNewTrack(db, trackInfo, socket.id, (id) => {
+    dbHandler.addNewTrack(db, trackInfo, (id) => {
       socket.broadcast.emit('get-new-track', id);
+    });
+  });
+
+  /*
+    Event handler for 'del-track', see 'removeTrack' documentation for
+    more information on what happens on the server/database side when triggered.
+
+    *** NOT TESTED! ***
+    Test when it's possible to delete tracks using the client.
+  */
+  socket.on('del-track', (trackInfo) => {
+    dbHandler.removeTrack(db, trackInfo, (id) => {
+      socket.broadcast.emit('get-del-track', id);
     });
   });
 

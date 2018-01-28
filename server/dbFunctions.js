@@ -67,7 +67,7 @@ function setUpDB(db) {
     VERY ALPHA! Everything in this function is mainly for checking that the
     communication between the client, server and database works!
   */
-  function addNewTrack(db, trackInfo, id, callback) {
+  function addNewTrack(db, trackInfo, callback) {
     var projectID = "project" + trackInfo.projectID.toString();
     var trackID = trackInfo.trackID.toString();
 
@@ -75,6 +75,28 @@ function setUpDB(db) {
 
     dbt.collection(projectID).insertOne({info: "new track", trackNum: trackID}, function(err, res) {
       if(err) throw err;
+      callback(trackID);
+    })
+  }
+
+  /*
+    Removes the track with id 'trackInfo.trackID' from the trackmanager and
+    from the database to the corresponding 'project' collection in the
+    'tracks' database. The trackID is then broadcasted to all other clients
+    connected to that project.
+
+    VERY ALPHA! Has not yet been tested so use carefully.
+  */
+  function removeTrack(db, trackInfo, callback) {
+    var projectID = "project" + trackInfo.projectID.toString();
+    var trackID = trackInfo.trackID.toString();
+    var query = {trackNum: trackID};
+
+    var dbt = db.db("tracks");
+
+    dbt.collection(projectID).deleteOne(query, function(err, res) {
+      if (err) throw err;
+      console.log("Track num ", trackID);
       callback(trackID);
     })
   }
@@ -119,19 +141,4 @@ function setUpDB(db) {
     })
   }
 
-  /*
-    Returns a reconstructed array of JSON 'track' objects, from
-        {_id: id, info: _info, trackNum: _trackNum},  to
-        {trackId: id}
-    to a callback function. The callback function (for now) is a socket.emit
-    call that sends all tracks to a client when it connects.
-  */
-  function reconstructRawTracks(rawTracks, callback) {
-    var recTracks = new Array(rawTracks.length);
-    for(var i=0; i<rawTracks.length; i++) {
-      recTracks[i] = {trackId: i};
-    }
-    callback(recTracks);
-  }
-
-  module.exports = {setUpDB, addNewTrack, numOfTracks, tracksFromProjectID, reconstructRawTracks}
+  module.exports = {setUpDB, addNewTrack, numOfTracks, tracksFromProjectID}
