@@ -28,7 +28,7 @@ export default class TrackManager extends Component {
     for(let track of this.state.tracks){
       tracks.push({key:track.trackId});
     }
-    
+
     return <FlatList style ={styles.flatListStyle}
       data={tracks}
       renderItem={({item}) => <Track key = {item.key}></Track>}
@@ -46,7 +46,7 @@ export default class TrackManager extends Component {
 
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
         {tracks}
-      <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
+        <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
 
 
       </View>

@@ -8,7 +8,7 @@ let RNFS = require('react-native-fs')
 export default class SampleBrowser extends Component {
   constructor(props){
     super(props);
-    this.state = {files: [], eles: []}
+    this.state = {eles: [], yOffset: 0}
   }
   componentDidMount(){
     this.write_dummy_samples();
@@ -27,10 +27,6 @@ export default class SampleBrowser extends Component {
     }
   }
 
-  update_files(files) {
-    this.setState({files:files});
-  }
-
   update_eles(eles) {
     this.setState({eles:eles});
   }
@@ -39,14 +35,12 @@ export default class SampleBrowser extends Component {
     // get a list of files and directories in the main bundle
     RNFS.readdir(RNFS.DocumentDirectoryPath) // On Android, use "RNFS.DocumentDirectoryPath" (MainBundlePath is not defined)
       .then((result) => {
-        let files = [];
         let eles = [];
+
         result.forEach((value,i)=>{
-          eles.push({key: value,movable:false});
-          files.push(value);
+          eles.push({key: value,index:i});
         })
 
-        this.update_files(files);
         this.update_eles(eles);
 
       })
@@ -55,46 +49,22 @@ export default class SampleBrowser extends Component {
       });
   }
 
-  display_samples(){
-    files = []
-
-    for(let file of this.state.files){
-      files.push(
-        {key:file}
-      );
-    }
-
-    return <FlatList
-              data={files}
-              renderItem={({item}) => <SampleBox onMove={this.handleSampleMove} name={item.key}></SampleBox>}
-            />;
-  }
-
   displaySample = (item) =>{
-    if(!item.movable){
-      return <SampleBox onMove={this.handleSampleMove} name={item.key}></SampleBox>;
-    }
-    else{
-      return <SampleBox onRelease={()=>{}} onMove={()=>{}} name={item.key+"(X)"}></SampleBox>
-    }
+    return <SampleBox index={item.index} onRelease={()=>{this.props.onRelease}} onMove={this.handleSampleMove} name={item.key}></SampleBox>;
   }
 
-  handleSampleMove = (sample) => {
-    let { eles } = this.state;
-    let ind=0
-    let i=0;
+  handleSampleMove = (sample, index, height, margin) => {
+    let x = 0;
+    let y = index*(height+margin)
+    this.props.onSampleMove(sample,x,y-this.state.yOffset);
+  }
 
-    for(let ele of eles){
-      if(ele.key===sample){
-        ele.movable=true
-      }
-      else{
-        ele.movable=false
-      }
-    }
-    this.setState(eles:eles);
-
-    this.props.onSampleMove(sample);
+  handleScroll = (e) =>{
+    this.setState({yOffset: e.nativeEvent.contentOffset.y})
+  }
+  
+  handleRelease = () =>{
+    this.props.onRelease();
   }
 
   render() {
@@ -105,6 +75,7 @@ export default class SampleBrowser extends Component {
         <FlatList
           data={this.state.eles}
           extraData={this.state}
+          onScroll={this.handleScroll}
           renderItem={({item}) => this.displaySample(item)}
         />
         {/* {samples} */}

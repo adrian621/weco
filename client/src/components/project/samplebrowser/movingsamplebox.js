@@ -19,6 +19,7 @@ export default class MovingSampleBox extends Component {
 
   componentWillMount(){
 
+    this.state.pan.setValue({ x:this.props.position.x, y:this.props.position.y});
     // Add a listener for the delta value change
     //this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);

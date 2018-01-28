@@ -15,11 +15,11 @@ export default class SampleBox extends Component {
   }
 
   onPressIn = () => {
-    this.props.onMove(this.props.name);
+    this.props.onMove(this.props.name, this.props.index,20,10);
   }
 
   onPressOut = () => {
-    console.log("out")
+    this.props.onRelease();
   }
 
   render(){
