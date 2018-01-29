@@ -27,8 +27,7 @@ export default class TrackManager extends Component {
     tracks = []
     for(let track of this.state.tracks){
       tracks.push({key:track.trackId});
-  }
-    //console.log(tracks)
+    }
     return <FlatList style ={styles.flatListStyle}
       data={tracks}
       renderItem={({item}) => <Track key = {item.key}></Track>}
@@ -38,16 +37,14 @@ export default class TrackManager extends Component {
 
 
   render() {
-
     let tracks = this.display_tracks();
-    //console.log("asdasdasd", tracks);
 
     return (
       <View style={styles.container}>
 
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
         {tracks}
-      <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
+        <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
 
 
       </View>

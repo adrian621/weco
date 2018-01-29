@@ -51,40 +51,47 @@ export default class App extends React.Component {
     });
   }
 
-  handleSampleMove = (sample) => {
-    this.setState({movingsample: sample});
+  handleSampleMove = (sample,x,y) => {
+    this.setState({movingsample:[]}, ()=>{
+      this.setState({movingsample: [sample,x,y]} )
+    });
+
   }
 
-  resetMovingSample() {
-    this.setState({movingsample: ''});
+  handleSampleDrop = () => {
+    //todo: Handle track drop if movingsample released on a track!
+    // console.log(this.state.movingsample,"-<")
+    // this.setState({movingsample: []});
   }
 
   display_movingsample() {
     const panStyle = {
         transform: this.state.pan.getTranslateTransform()
     }
-    if (this.state.movingsample==''){
-      return
+    if (this.state.movingsample.length==0){
+      return [];
     }
-    return <MovingSampleBox onMove={()=>{}} name={this.state.movingsample}></MovingSampleBox>
+
+    return <MovingSampleBox onRelease={this.handleSampleDrop} onMove={()=>{}} name={this.state.movingsample[0]}
+       position={{x:this.state.movingsample[1],y:this.state.movingsample[2]}}></MovingSampleBox>
   }
 
   render() {
-    console.log("->",this.state.movingsample)
+
     let movingsample = this.display_movingsample();
 
     return (
-      <Animated.View style={styles.container}>
+      <View style={styles.container}>
 
         <View style={{flex: 2}}>
-          <SampleBrowser onSampleMove={this.handleSampleMove}></SampleBrowser>
+          <SampleBrowser onRelease={this.handleSampleDrop} onSampleMove={this.handleSampleMove}></SampleBrowser>
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
             <TrackManager></TrackManager>
         </View>
         {movingsample}
-      </Animated.View>
+      </View>
     );
   }
 }
