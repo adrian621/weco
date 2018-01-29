@@ -27,11 +27,15 @@ export default class TrackManager extends Component {
     this.socket.on('get-new-track', (res) => {
       //alert(tracks.length);
       var tracks = this.state.tracks;
-      
+
+      tracks.push({'trackId': res});
+      this.setState({tracks: tracks});
+      /*
       if(res != tracks.length-1) {
         tracks.push({'trackId': res});
         this.setState({tracks: tracks});
       }
+      */
     });
   }
 
