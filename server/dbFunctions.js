@@ -57,7 +57,49 @@ function setUpDB(db) {
             });
           });
         }
-      })
+      });
+
+    var dbs = db.db("samples");
+    console.log("Database 'samples' exists/created");
+
+    dbs.listCollections()
+    .next(function(err, collinfo) {
+      if (err) throw err;
+
+      if(collinfo) {
+        console.log(collinfo.name, " exists.");
+      }
+
+      else {
+        dbs.createCollection("project1", function(err, res) {
+          if (err) throw err;
+          console.log("Collection 'tracks.project1' created.");
+
+          // sampleID is the ID of the actual sample in the device database.
+          var sample_info = { info: "new sample", trackNum: "0", sampleNum: "0", sampleID: "0"};
+          dbs.collection("project1").insertOne(sample_info, function(err,res) {
+            if (err) throw err;
+            console.log("Project1.sample info inserted.");
+          });
+        });
+      }
+    });
+  }
+
+  function addNewSample(db, sampleInfo, callback) {
+    var projectID = "project" + sampleInfo.projectID.toString();
+    var sampleNum = sampleInfo.sampleID.toString();
+    var trackID = sampleInfo.trackNum.toString();
+    var sampleID = "dummyID";
+
+    var dbs = db.db("samples");
+
+    var newSample = {info: "new sample", trackNum: trackID, sampleNum: sampleNum, sampleID: sampleID};
+    dbs.collection(projectID).insertOne(newSample, function(err, res) {
+      if(err) throw err;
+      //All but 'info' is needed for correct placement/info to other clients
+      callback(newSample);
+    });
   }
 
   /*
