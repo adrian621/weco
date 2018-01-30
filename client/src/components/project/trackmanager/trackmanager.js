@@ -11,13 +11,12 @@ export default class TrackManager extends Component {
     super();
 
     this.state = {
-        tracks: []
+        tracks: [],
+        sampleDropped:[],
+        scrollOffset: 0
     };
 
     this.socket = SocketIOClient('http://10.0.2.2:3000');
-
-    this.addNewTrack = this.addNewTrack.bind(this);
-    this.display_tracks = this.display_tracks.bind(this);
 
     this.socket.on('on-connect', (res) => {
       //alert(tracks.length);
@@ -25,8 +24,7 @@ export default class TrackManager extends Component {
     });
 
     this.socket.on('get-new-track', (res) => {
-      //alert(tracks.length);
-      var tracks = this.state.tracks;
+      let tracks = this.state.tracks;
 
       tracks.push({'trackId': res});
       this.setState({tracks: tracks});
@@ -39,38 +37,62 @@ export default class TrackManager extends Component {
     });
   }
 
-  addNewTrack(){
-    var tracks = this.state.tracks;
-    var trackId = tracks.length;
-    tracks.push({'trackId': trackId});
+  componentWillReceiveProps(nextProps){
+    if(nextProps.sampleDroppedAt.length!=0){
+        let curr=this.props.sampleDroppedAt;
+        let next=nextProps.sampleDroppedAt;
+        if(curr[1]!=next[1]&&curr[2]!=next[2]){
+          if(this.state.tracks.length!=0){//Annars blir det fakd när man inte har några tracks
+            this.setState({sampleDropped:next});
+          }
+        }
+    }
+  }
+
+  addNewTrack = () => {
+    let tracks = this.state.tracks;
+    let trackId = tracks.length;
+
+    tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
+
     this.setState({tracks: tracks}, () => {
       this.socket.emit('new-track', {trackID: trackId, projectID: 1});
     });
   }
 
+  handleTrackLayout = (height,width,marginBottom,id) =>{
+    let y = id*(height+marginBottom);
 
+    let tracks = this.state.tracks;
+    tracks[id].height=height;
+    tracks[id].width=width;
+    tracks[id].y=id*(height+marginBottom);
 
-  display_tracks(){
-    tracks = []
-    for(let track of this.state.tracks){
-      tracks.push({key:track.trackId});
-    }
-    return <FlatList style ={styles.flatListStyle}
-      data={tracks}
-      renderItem={({item}) => <Track key = {item.key}></Track>}
-    />
+    this.setState({tracks:tracks});
 
   }
 
+  handleScroll = (e) =>{
+    this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
+  }
+
+  displayTrack = (item) =>{
+    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
+            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
+            id={item.trackId} sample={item.sample}>
+           </Track>;
+  }
 
   render() {
-    let tracks = this.display_tracks();
-
     return (
       <View style={styles.container}>
-
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
-        {tracks}
+        <FlatList
+          data={this.state.tracks}
+          extraData={this.state}
+          onScroll={this.handleScroll}
+          renderItem={({item}) => this.displayTrack(item)}
+        />
         <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
 
 
@@ -81,7 +103,8 @@ export default class TrackManager extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: '#d9d9d9'
   },
   flatListStyle:{
     height: '100%'

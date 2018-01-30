@@ -14,7 +14,9 @@ export default class App extends React.Component {
 
       this.state = {
           pan: new Animated.ValueXY(),
-          movingsample: ''
+          movingsample: '',
+          sampleDroppedAt: [],
+          sampleBrowserWidth: 0
       };
   }
   componentWillMount(){
@@ -29,6 +31,7 @@ export default class App extends React.Component {
       onShouldBlockNativeResponder: () => true,
 
       onPanResponderGrant: (e, gestureState) => {
+
         this.state.pan.setOffset({x: this.state.pan.x._value, y: this.state.pan.y._value});
         this.state.pan.setValue({ x:0, y:0});
       },
@@ -58,10 +61,13 @@ export default class App extends React.Component {
 
   }
 
-  handleSampleDrop = () => {
+  handleSampleDrop = (sample,x,y) => {
     //todo: Handle track drop if movingsample released on a track!
     // console.log(this.state.movingsample,"-<")
-    // this.setState({movingsample: []});
+    this.setState({movingsample: []});
+
+
+    this.setState({sampleDroppedAt:[sample,x,y]});
   }
 
   display_movingsample() {
@@ -73,24 +79,26 @@ export default class App extends React.Component {
     }
 
     return <MovingSampleBox onRelease={this.handleSampleDrop} onMove={()=>{}} name={this.state.movingsample[0]}
-       position={{x:this.state.movingsample[1],y:this.state.movingsample[2]}}></MovingSampleBox>
+       offset={{x:this.state.movingsample[1],y:this.state.movingsample[2]}}></MovingSampleBox>
+  }
+
+  handleLayout = (event) =>{
+    this.setState({sampleBrowserWidth: event.nativeEvent.layout.width})
   }
 
   render() {
 
-    let movingsample = this.display_movingsample();
-
     return (
       <View style={styles.container}>
 
-        <View style={{flex: 2}}>
+        <View style={{flex: 2}} onLayout={this.handleLayout}>
           <SampleBrowser onRelease={this.handleSampleDrop} onSampleMove={this.handleSampleMove}></SampleBrowser>
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
-            <TrackManager></TrackManager>
+            <TrackManager offsetX={this.state.sampleBrowserWidth} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
         </View>
-        {movingsample}
+        {this.display_movingsample()}
       </View>
     );
   }
