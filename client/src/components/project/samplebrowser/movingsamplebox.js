@@ -19,7 +19,7 @@ export default class MovingSampleBox extends Component {
 
   componentWillMount(){
 
-    this.state.pan.setValue({ x:this.props.position.x, y:this.props.position.y});
+    this.state.pan.setValue({ x:this.props.offset.x, y:this.props.offset.y});
     // Add a listener for the delta value change
     //this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);
@@ -48,7 +48,11 @@ export default class MovingSampleBox extends Component {
       },
 
       onPanResponderRelease: (e, {vx, vy}) => {
-        this.props.onRelease();
+        //Argument 2 and 3 to onRelease is equivalent to this sampleboxes current xy coordinates
+        //relative to the parent view (project view)
+        this.props.onRelease(this.props.name, this.state.pan.x._value+this.props.offset.x,
+          this.state.pan.y._value+this.props.offset.y);
+
         this.state.pan.setValue({ x:0, y:0});
         this.state.pan.flattenOffset();
       }

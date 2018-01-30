@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from 'react-native';
 
 export default class newTrackButton extends Component {
-  
+
     render() {
     return (
     <View style = {styles.container}>
@@ -20,8 +20,8 @@ export default class newTrackButton extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'blue',
     height: '10%',
-    
+    marginBottom:0
+
   },
 });
