@@ -8,7 +8,7 @@ let RNFS = require('react-native-fs')
 export default class SampleBrowser extends Component {
   constructor(props){
     super(props);
-    this.state = {eles: [], yOffset: 0}
+    this.state = {files: [], yOffset: 0}
   }
   componentDidMount(){
     this.write_dummy_samples();
@@ -27,21 +27,21 @@ export default class SampleBrowser extends Component {
     }
   }
 
-  update_eles(eles) {
-    this.setState({eles:eles});
+  update_files(files) {
+    this.setState({files:files});
   }
 
   read_files() {
     // get a list of files and directories in the main bundle
     RNFS.readdir(RNFS.DocumentDirectoryPath) // On Android, use "RNFS.DocumentDirectoryPath" (MainBundlePath is not defined)
       .then((result) => {
-        let eles = [];
+        let files = [];
 
         result.forEach((value,i)=>{
-          eles.push({key: value,index:i});
+          files.push({key: value,index:i});
         })
 
-        this.update_eles(eles);
+        this.update_files(files);
 
       })
       .catch((err) => {
@@ -62,7 +62,7 @@ export default class SampleBrowser extends Component {
   handleScroll = (e) =>{
     this.setState({yOffset: e.nativeEvent.contentOffset.y})
   }
-  
+
   handleRelease = () =>{
     this.props.onRelease();
   }
@@ -71,14 +71,12 @@ export default class SampleBrowser extends Component {
     //let samples = this.display_samples();
     return (
       <View style={styles.container}>
-        {/* <Button onPress={()=>this.read_files()} title="Load!"/> */}
         <FlatList
-          data={this.state.eles}
+          data={this.state.files}
           extraData={this.state}
           onScroll={this.handleScroll}
           renderItem={({item}) => this.displaySample(item)}
         />
-        {/* {samples} */}
       </View>
     );
   }
