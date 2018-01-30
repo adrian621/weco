@@ -86,11 +86,26 @@ function setUpDB(db) {
     });
   }
 
+  /*
+    Adds a new sample to the database 'samples' in the collection 'projectID'. This function is called when the event
+    'new-sample' is emitted from a client.
+
+    sampleInfo = {
+                    projectID: _projectID,   // Used for finding right project-collection (int)
+                    trackNum: _trackNum,     // ID of sample in a track                   (int)
+                    sampleNum: _sampleNum,   // ID of track where the sample is placed    (int)
+                    sampleID: _sampleIDs     // ID of sample on the client databases      (???)
+                  }
+
+    VERY ALPHA! Everything in this function is mainly for checking that the
+    communication between the client, server and database works!
+  */
+
   function addNewSample(db, sampleInfo, callback) {
     var projectID = "project" + sampleInfo.projectID.toString();
-    var sampleNum = sampleInfo.sampleID.toString();
+    var sampleNum = sampleInfo.sampleNum.toString();
     var trackID = sampleInfo.trackNum.toString();
-    var sampleID = "dummyID";
+    var sampleID = "dummyID"; //sampleInfo.sampleID.toString();
 
     var dbs = db.db("samples");
 
@@ -99,6 +114,23 @@ function setUpDB(db) {
       if(err) throw err;
       //All but 'info' is needed for correct placement/info to other clients
       callback(newSample);
+    });
+  }
+
+  /*
+    Returns an array of all samples that are in the collection of
+    'projectId' that satifies the query '{trackID: trackID}' in the
+    database 'samples' to a callback function.
+  */
+  function samplesFromIDs(db, projectId, trackId, callback) {
+    var query = {trackID: trackId};
+    var projectID = "project" + projectId.toString();
+    var dbs = db.db("samples");
+
+    dbs.collection(projectID).find({query}).toArray(function(err, res) {
+      if (err) throw err;
+      console.log(res);
+      callback(res);
     });
   }
 
@@ -183,4 +215,6 @@ function setUpDB(db) {
     })
   }
 
-  module.exports = {setUpDB, addNewTrack, numOfTracks, tracksFromProjectID}
+  module.exports = {setUpDB,
+                    addNewTrack, numOfTracks, tracksFromProjectID,
+                    addNewSample, samplesFromIDs, samplesFromIDs}
