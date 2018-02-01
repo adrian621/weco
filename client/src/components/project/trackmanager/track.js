@@ -18,6 +18,7 @@ export default class Track extends Component {
           //Handle sample dropped here
           //Check bounding rectangle of this box
           this.handleSampleDrop(nextProps.droppedSample);
+          this.loadSample(nextProps.droppedSample);
         }
     }
   }
@@ -37,6 +38,12 @@ export default class Track extends Component {
         this.setState({sample: sampleData[0]})
       }
   }
+
+  loadSample = (sampleData) =>{
+  let sample = sampleData[0];
+
+  }
+
 
   handleLayout = (event) =>{
     let layout = event.nativeEvent.layout;

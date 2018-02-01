@@ -4,6 +4,7 @@ import SampleBox from './sampleBox';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SocketIOClient from 'socket.io-client';
+import SoundControl from './soundControl';
 
 export default class TrackManager extends Component {
 
@@ -85,7 +86,12 @@ export default class TrackManager extends Component {
 
   render() {
     return (
+   
       <View style={styles.container}>
+        <View style = {styles.SoundControlContainer}>
+         <SoundControl onPlay = {()=>{}} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+         </View>
+        <View style = {styles.TrackMContainer}>
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
         <FlatList
           data={this.state.tracks}
@@ -94,7 +100,7 @@ export default class TrackManager extends Component {
           renderItem={({item}) => this.displayTrack(item)}
         />
         <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
-
+        </View>
 
       </View>
     );
@@ -108,5 +114,12 @@ const styles = StyleSheet.create({
   },
   flatListStyle:{
     height: '100%'
+  },
+  SoundControlContainer:{
+    flex: 1
+  },
+  TrackMContainer: {
+    flex: 4
+
   }
 });
