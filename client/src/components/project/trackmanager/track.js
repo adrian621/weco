@@ -11,6 +11,9 @@ export default class Track extends Component {
     };
   }
   componentWillReceiveProps(nextProps){
+    if(nextProps.droppedSample==='undefined'){
+      return;
+    }
     if(nextProps.droppedSample.length!=0){
         let curr=this.props.droppedSample;
         let next=nextProps.droppedSample;
@@ -18,7 +21,6 @@ export default class Track extends Component {
           //Handle sample dropped here
           //Check bounding rectangle of this box
           this.handleSampleDrop(nextProps.droppedSample);
-          this.loadSample(nextProps.droppedSample);
         }
     }
   }
@@ -26,24 +28,19 @@ export default class Track extends Component {
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
     let sampleX = sampleData[1]-this.props.offsetX;
-    let sampleY = sampleData[2];
+    let sampleY = sampleData[2]-this.props.offsetY;
 
     let trackX=0;
     let trackY = this.props.y-this.props.scrollOffset;
+
     let trackWidth = this.state.width;
     let trackHeight= this.state.height;
 
     if(sampleX>trackX && sampleX<trackX+trackWidth &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
-        this.setState({sample: sampleData[0]})
+        this.setState({sample: sampleData[0]});
       }
   }
-
-  loadSample = (sampleData) =>{
-  let sample = sampleData[0];
-
-  }
-
 
   handleLayout = (event) =>{
     let layout = event.nativeEvent.layout;

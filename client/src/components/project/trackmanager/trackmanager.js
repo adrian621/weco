@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, FlatList } from 'react-native';
-import SampleBox from './sampleBox';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SocketIOClient from 'socket.io-client';
@@ -14,7 +13,8 @@ export default class TrackManager extends Component {
     this.state = {
         tracks: [],
         sampleDropped:[],
-        scrollOffset: 0
+        scrollOffset: 0,
+        offsetY: 0
     };
 
     this.socket = SocketIOClient('http://10.0.2.2:3000');
@@ -74,21 +74,26 @@ export default class TrackManager extends Component {
   }
 
   handleScroll = (e) =>{
-    this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
+    this.setState({offsetY: e.nativeEvent.contentOffset.y})
   }
 
   displayTrack = (item) =>{
-    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
+    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
+            offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
             id={item.trackId} sample={item.sample}>
            </Track>;
   }
 
+  handleSCLayout = (e) =>{
+    this.setState({offsetY: e.nativeEvent.layout.height});
+  }
+
   render() {
     return (
-   
+
       <View style={styles.container}>
-        <View style = {styles.SoundControlContainer}>
+        <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
          <SoundControl onPlay = {()=>{}} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
          </View>
         <View style = {styles.TrackMContainer}>

@@ -62,11 +62,7 @@ export default class App extends React.Component {
   }
 
   handleSampleDrop = (sample,x,y) => {
-    //todo: Handle track drop if movingsample released on a track!
-    // console.log(this.state.movingsample,"-<")
     this.setState({movingsample: []});
-
-
     this.setState({sampleDroppedAt:[sample,x,y]});
   }
 
