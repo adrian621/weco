@@ -22,6 +22,10 @@ export default class Track extends Component {
     }
   }
 
+  componentWillUpdate(droppedSample) {
+    this.handleSampleDrop(droppedSample);
+  }
+
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
     let sampleX = sampleData[1]-this.props.offsetX;
