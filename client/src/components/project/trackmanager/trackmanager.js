@@ -3,12 +3,12 @@ import { StyleSheet, Text, View, FlatList } from 'react-native';
 import SampleBox from './sampleBox';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
-import SocketIOClient from 'socket.io-client';
+//import SocketIOClient from 'socket.io-client';
 
 export default class TrackManager extends Component {
 
-  constructor(){
-    super();
+  constructor(props){
+    super(props);
 
     this.state = {
         tracks: [],
@@ -16,7 +16,7 @@ export default class TrackManager extends Component {
         scrollOffset: 0
     };
 
-    this.socket = SocketIOClient('http://10.0.2.2:3000');
+    this.socket = this.props.socket;
 
     this.socket.on('on-connect', (res) => {
       //alert(tracks.length);
@@ -28,12 +28,20 @@ export default class TrackManager extends Component {
 
       tracks.push({'trackId': res});
       this.setState({tracks: tracks});
-      /*
-      if(res != tracks.length-1) {
-        tracks.push({'trackId': res});
-        this.setState({tracks: tracks});
-      }
-      */
+    });
+
+    this.socket.on('update-track', (res) => {
+      //alert(res.name);
+      let updated_tracks = [...this.state.tracks];
+      let sampleName = res.name;
+      let trackID = res.trackID;
+
+      updated_tracks[trackID].sample = sampleName;
+
+      this.setState({tracks: updated_tracks}, () => {
+        //this.forceUpdate();
+        //alert(this.state.tracks[trackID].sample);
+      });
     });
   }
 
@@ -77,7 +85,7 @@ export default class TrackManager extends Component {
   }
 
   displayTrack = (item) =>{
-    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
+    return <Track socket={this.socket}scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
             id={item.trackId} sample={item.sample}>
            </Track>;

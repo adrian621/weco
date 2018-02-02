@@ -2,13 +2,16 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default class Track extends Component {
-  constructor(){
-    super();
+  constructor(props){
+    super(props);
     this.state = {
         width: 0,
         height: 0,
         sample: ''
     };
+
+    this.socket = this.props.socket;
+
   }
   componentWillReceiveProps(nextProps){
     if(nextProps.droppedSample.length!=0){
@@ -38,7 +41,9 @@ export default class Track extends Component {
 
     if(sampleX>trackX && sampleX<trackX+trackWidth &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
-        this.setState({sample: sampleData[0]})
+        this.setState({sample: sampleData[0]}, () => {
+          this.socket.emit('new-sample-track', {trackID: this.props.id, name: sampleData[0]});
+        })
       }
   }
 
