@@ -5,10 +5,17 @@ import NewTrackButton from './newTrackButton';
 import SocketIOClient from 'socket.io-client';
 import SoundControl from './soundControl';
 
+var Sound = require('react-native-sound');
+
+
+
+
 export default class TrackManager extends Component {
 
   constructor(){
     super();
+
+    Sound.setCategory('Playback', true); // true = mixWithOthers
 
     this.state = {
         tracks: [],
@@ -49,6 +56,29 @@ export default class TrackManager extends Component {
         }
     }
   }
+
+  playSound = () =>{
+    const r = `./${this.state.sampleDropped[0]}` 
+    alert(r);
+
+      const callback = (error, sound) => {
+        if (error) {
+          Alert.alert('error', error.message);
+          return;
+        }
+        // Run optional pre-play callback
+        sound.play(() => {
+          // Success counts as getting to the end
+          //setTestState(testInfo, component, 'win');
+          // Release when it's done so we're not using up resources
+          sound.release();
+        });
+    };
+      if(this.state.sampleDropped[1] != undefined){
+      const sound = new Sound(require('./sample1.mp3'), error => callback(error, sound));
+      //const sound2 = new Sound(require('./sample1.mp3'), error => callback(error, sound));
+      }
+    }
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
@@ -94,7 +124,7 @@ export default class TrackManager extends Component {
 
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-         <SoundControl onPlay = {()=>{}} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+         <SoundControl onPlay = {this.playSound} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
          </View>
         <View style = {styles.TrackMContainer}>
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
