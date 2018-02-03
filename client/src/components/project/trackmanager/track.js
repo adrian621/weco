@@ -15,6 +15,11 @@ export default class Track extends Component {
   }
   componentWillReceiveProps(nextProps){
     this.setState({sample: nextProps.sample});
+
+    if(nextProps.droppedSample==='undefined'){
+      return;
+    }
+
     if(nextProps.droppedSample.length!=0){
         let curr=this.props.droppedSample;
         let next=nextProps.droppedSample;
@@ -33,19 +38,24 @@ export default class Track extends Component {
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
     let sampleX = sampleData[1]-this.props.offsetX;
-    let sampleY = sampleData[2];
+    let sampleY = sampleData[2]-this.props.offsetY;
 
     let trackX=0;
     let trackY = this.props.y-this.props.scrollOffset;
+
     let trackWidth = this.state.width;
     let trackHeight= this.state.height;
 
     if(sampleX>trackX && sampleX<trackX+trackWidth &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
+<<<<<<< HEAD
         this.setState({sample: sampleData[0]}, () => {
           this.props.onChange({trackID: this.props.id, sample: sampleData[0]});
           this.socket.emit('new-sample-track', {trackID: this.props.id, name: sampleData[0]});
         });
+=======
+        this.setState({sample: sampleData[0]});
+>>>>>>> origin/master
       }
   }
 

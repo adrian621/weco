@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, FlatList } from 'react-native';
-import SampleBox from './sampleBox';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
-//import SocketIOClient from 'socket.io-client';
+import SoundControl from './soundControl';
+
 
 export default class TrackManager extends Component {
 
@@ -13,7 +13,8 @@ export default class TrackManager extends Component {
     this.state = {
         tracks: [],
         sampleDropped:[],
-        scrollOffset: 0
+        scrollOffset: 0,
+        offsetY: 0
     };
 
     this.socket = this.props.socket;
@@ -81,7 +82,7 @@ export default class TrackManager extends Component {
   }
 
   handleScroll = (e) =>{
-    this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
+    this.setState({offsetY: e.nativeEvent.contentOffset.y})
   }
 
   onChange = (data) => {
@@ -96,15 +97,29 @@ export default class TrackManager extends Component {
   }
 
   displayTrack = (item) =>{
+<<<<<<< HEAD
     return <Track socket={this.socket}scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
+=======
+    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
+            offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
+>>>>>>> origin/master
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
             id={item.trackId} sample={item.sample} onChange={this.onChange}>
            </Track>;
   }
 
+  handleSCLayout = (e) =>{
+    this.setState({offsetY: e.nativeEvent.layout.height});
+  }
+
   render() {
     return (
+
       <View style={styles.container}>
+        <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
+         <SoundControl onPlay = {()=>{}} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+         </View>
+        <View style = {styles.TrackMContainer}>
         <Text style = {{textAlign: 'center'}}>Track manager</Text>
         <FlatList
           data={this.state.tracks}
@@ -113,7 +128,7 @@ export default class TrackManager extends Component {
           renderItem={({item}) => this.displayTrack(item)}
         />
         <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
-
+        </View>
 
       </View>
     );
@@ -127,5 +142,12 @@ const styles = StyleSheet.create({
   },
   flatListStyle:{
     height: '100%'
+  },
+  SoundControlContainer:{
+    flex: 1
+  },
+  TrackMContainer: {
+    flex: 4
+
   }
 });
