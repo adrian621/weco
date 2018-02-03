@@ -84,10 +84,21 @@ export default class TrackManager extends Component {
     this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
   }
 
+  onChange = (data) => {
+    let trackID = data.trackID;
+    let sample = data.sample;
+
+    let updated_tracks = [...this.state.tracks];
+
+    updated_tracks[trackID].sample = sample;
+
+    this.setState({tracks: updated_tracks});
+  }
+
   displayTrack = (item) =>{
     return <Track socket={this.socket}scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
-            id={item.trackId} sample={item.sample}>
+            id={item.trackId} sample={item.sample} onChange={this.onChange}>
            </Track>;
   }
 

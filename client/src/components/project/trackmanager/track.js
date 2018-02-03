@@ -14,6 +14,7 @@ export default class Track extends Component {
 
   }
   componentWillReceiveProps(nextProps){
+    this.setState({sample: nextProps.sample});
     if(nextProps.droppedSample.length!=0){
         let curr=this.props.droppedSample;
         let next=nextProps.droppedSample;
@@ -25,9 +26,9 @@ export default class Track extends Component {
     }
   }
 
-  componentWillUpdate(droppedSample) {
+  /*componentWillUpdate(droppedSample) {
     this.handleSampleDrop(droppedSample);
-  }
+  }*/
 
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
@@ -42,8 +43,9 @@ export default class Track extends Component {
     if(sampleX>trackX && sampleX<trackX+trackWidth &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
         this.setState({sample: sampleData[0]}, () => {
+          this.props.onChange({trackID: this.props.id, sample: sampleData[0]});
           this.socket.emit('new-sample-track', {trackID: this.props.id, name: sampleData[0]});
-        })
+        });
       }
   }
 
