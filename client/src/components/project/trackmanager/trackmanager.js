@@ -82,7 +82,7 @@ export default class TrackManager extends Component {
   }
 
   handleScroll = (e) =>{
-    this.setState({offsetY: e.nativeEvent.contentOffset.y})
+    this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
   }
 
   onChange = (data) => {
@@ -97,7 +97,7 @@ export default class TrackManager extends Component {
   }
 
   displayTrack = (item) =>{
-    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
+    return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
             offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
             id={item.trackId} sample={item.sample} onChange={this.onChange}>
