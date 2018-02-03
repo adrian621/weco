@@ -97,12 +97,8 @@ export default class TrackManager extends Component {
   }
 
   displayTrack = (item) =>{
-<<<<<<< HEAD
-    return <Track socket={this.socket}scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX} y={this.state.tracks[item.trackId].y}
-=======
     return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
             offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
->>>>>>> origin/master
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
             id={item.trackId} sample={item.sample} onChange={this.onChange}>
            </Track>;

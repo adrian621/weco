@@ -48,14 +48,10 @@ export default class Track extends Component {
 
     if(sampleX>trackX && sampleX<trackX+trackWidth &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
-<<<<<<< HEAD
         this.setState({sample: sampleData[0]}, () => {
           this.props.onChange({trackID: this.props.id, sample: sampleData[0]});
           this.socket.emit('new-sample-track', {trackID: this.props.id, name: sampleData[0]});
         });
-=======
-        this.setState({sample: sampleData[0]});
->>>>>>> origin/master
       }
   }
 
