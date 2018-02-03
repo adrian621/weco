@@ -41,6 +41,12 @@ io.on('connection', function (socket) {
     });
   });
 
+  socket.on('new-sample-track', (sampleInfo) => {
+    dbHandler.addNewSampleTrack(db, sampleInfo, (res) => {
+      socket.broadcast.emit('update-track', res);
+    });
+  });
+
   /*
     Event handler for 'new-track', see 'addNewTrack' documentation for
     more information on what happens on the server/database side when triggered.

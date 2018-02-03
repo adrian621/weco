@@ -2,13 +2,13 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, View, FlatList } from 'react-native';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
-import SocketIOClient from 'socket.io-client';
 import SoundControl from './soundControl';
+
 
 export default class TrackManager extends Component {
 
-  constructor(){
-    super();
+  constructor(props){
+    super(props);
 
     this.state = {
         tracks: [],
@@ -17,7 +17,7 @@ export default class TrackManager extends Component {
         offsetY: 0
     };
 
-    this.socket = SocketIOClient('http://10.0.2.2:3000');
+    this.socket = this.props.socket;
 
     this.socket.on('on-connect', (res) => {
       //alert(tracks.length);
@@ -29,12 +29,20 @@ export default class TrackManager extends Component {
 
       tracks.push({'trackId': res});
       this.setState({tracks: tracks});
-      /*
-      if(res != tracks.length-1) {
-        tracks.push({'trackId': res});
-        this.setState({tracks: tracks});
-      }
-      */
+    });
+
+    this.socket.on('update-track', (res) => {
+      //alert(res.name);
+      let updated_tracks = [...this.state.tracks];
+      let sampleName = res.name;
+      let trackID = res.trackID;
+
+      updated_tracks[trackID].sample = sampleName;
+
+      this.setState({tracks: updated_tracks}, () => {
+        //this.forceUpdate();
+        //alert(this.state.tracks[trackID].sample);
+      });
     });
   }
 
@@ -74,14 +82,25 @@ export default class TrackManager extends Component {
   }
 
   handleScroll = (e) =>{
-    this.setState({offsetY: e.nativeEvent.contentOffset.y})
+    this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
+  }
+
+  onChange = (data) => {
+    let trackID = data.trackID;
+    let sample = data.sample;
+
+    let updated_tracks = [...this.state.tracks];
+
+    updated_tracks[trackID].sample = sample;
+
+    this.setState({tracks: updated_tracks});
   }
 
   displayTrack = (item) =>{
-    return <Track scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
+    return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
             offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
-            id={item.trackId} sample={item.sample}>
+            id={item.trackId} sample={item.sample} onChange={this.onChange}>
            </Track>;
   }
 
