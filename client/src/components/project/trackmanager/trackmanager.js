@@ -21,7 +21,19 @@ export default class TrackManager extends Component {
 
     this.socket.on('on-connect', (res) => {
       //alert(tracks.length);
-      this.setState({tracks: res});
+      this.setState({tracks: res}, () => {
+        this.socket.emit('get-curr-samples', {projectID: "project1"});
+      });
+    });
+
+    this.socket.on('on-connect-samples', (res) => {
+      let tracks = this.state.tracks;
+      for(let i=0; i<res.length; i++) {
+        let trackID = res[i].trackID;
+        let sample = res[i].name;
+        tracks[trackID].sample = sample;
+      }
+      this.setState({tracks: tracks});
     });
 
     this.socket.on('get-new-track', (res) => {
@@ -39,10 +51,7 @@ export default class TrackManager extends Component {
 
       updated_tracks[trackID].sample = sampleName;
 
-      this.setState({tracks: updated_tracks}, () => {
-        //this.forceUpdate();
-        //alert(this.state.tracks[trackID].sample);
-      });
+      this.setState({tracks: updated_tracks});
     });
   }
 
@@ -122,6 +131,7 @@ export default class TrackManager extends Component {
           extraData={this.state}
           onScroll={this.handleScroll}
           renderItem={({item}) => this.displayTrack(item)}
+          keyExtractor={(item, index) => index}
         />
         <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
         </View>

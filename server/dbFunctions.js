@@ -58,7 +58,7 @@ function setUpDB(db) {
           });
         }
       });
-
+    /*
     var dbs = db.db("samples");
     console.log("Database 'samples' exists/created");
 
@@ -83,7 +83,7 @@ function setUpDB(db) {
           });
         });
       }
-    });
+    });*/
   }
 
   /*
@@ -103,11 +103,11 @@ function setUpDB(db) {
 
   function addNewSampleTrack(db, sampleInfo, callback) {
     /*
-    var projectID = "project" + sampleInfo.projectID.toString();
     var sampleNum = sampleInfo.sampleNum.toString();
     var trackID = sampleInfo.trackNum.toString();
     var sampleID = "dummyID"; //sampleInfo.sampleID.toString();
     */
+    var projectID = "project" + sampleInfo.projectID.toString();
     var trackID = sampleInfo.trackID;
     var sample = sampleInfo.name;
 
@@ -115,13 +115,11 @@ function setUpDB(db) {
 
     var newSample = {trackID: trackID, name: sample};
     //var newSample = {info: "new sample", trackNum: trackID, sampleNum: sampleNum, sampleID: sampleID};
-    /*dbs.collection(projectID).insertOne(newSample, function(err, res) {
+    dbs.collection(projectID).insertOne(newSample, function(err, res) {
       if(err) throw err;
-      //All but 'info' is needed for correct placement/info to other clients
+
       callback(newSample);
-    }); */
-    console.log("sample added to track...");
-    callback(newSample);
+    });
   }
 
   /*
@@ -135,6 +133,17 @@ function setUpDB(db) {
     var dbs = db.db("samples");
 
     dbs.collection(projectID).find({query}).toArray(function(err, res) {
+      if (err) throw err;
+      //console.log(res);
+      callback(res);
+    });
+  }
+
+  function samplesFromProjectID(db, projectId, callback) {
+    var projectID = "project" + projectId.toString();
+    var dbs = db.db("samples");
+
+    dbs.collection(projectID).find({}).toArray(function(err, res) {
       if (err) throw err;
       console.log(res);
       callback(res);
@@ -224,4 +233,4 @@ function setUpDB(db) {
 
   module.exports = {setUpDB,
                     addNewTrack, numOfTracks, tracksFromProjectID,
-                    addNewSampleTrack, samplesFromIDs, samplesFromIDs}
+                    addNewSampleTrack, samplesFromIDs, samplesFromIDs, samplesFromProjectID}
