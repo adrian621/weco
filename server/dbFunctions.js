@@ -57,7 +57,97 @@ function setUpDB(db) {
             });
           });
         }
-      })
+      });
+    /*
+    var dbs = db.db("samples");
+    console.log("Database 'samples' exists/created");
+
+    dbs.listCollections()
+    .next(function(err, collinfo) {
+      if (err) throw err;
+
+      if(collinfo) {
+        console.log(collinfo.name, " exists.");
+      }
+
+      else {
+        dbs.createCollection("project1", function(err, res) {
+          if (err) throw err;
+          console.log("Collection 'tracks.project1' created.");
+
+          // sampleID is the ID of the actual sample in the device database.
+          var sample_info = { info: "new sample", trackNum: "0", sampleNum: "0", sampleID: "0"};
+          dbs.collection("project1").insertOne(sample_info, function(err,res) {
+            if (err) throw err;
+            console.log("Project1.sample info inserted.");
+          });
+        });
+      }
+    });*/
+  }
+
+  /*
+    Adds a new sample to the database 'samples' in the collection 'projectID'. This function is called when the event
+    'new-sample' is emitted from a client.
+
+    sampleInfo = {
+                    projectID: _projectID,   // Used for finding right project-collection (int)
+                    trackNum: _trackNum,     // ID of sample in a track                   (int)
+                    sampleNum: _sampleNum,   // ID of track where the sample is placed    (int)
+                    sampleID: _sampleIDs     // ID of sample on the client databases      (???)
+                  }
+
+    VERY ALPHA! Everything in this function is mainly for checking that the
+    communication between the client, server and database works!
+  */
+
+  function addNewSampleTrack(db, sampleInfo, callback) {
+    /*
+    var sampleNum = sampleInfo.sampleNum.toString();
+    var trackID = sampleInfo.trackNum.toString();
+    var sampleID = "dummyID"; //sampleInfo.sampleID.toString();
+    */
+    var projectID = "project" + sampleInfo.projectID.toString();
+    var trackID = sampleInfo.trackID;
+    var sample = sampleInfo.name;
+
+    var dbs = db.db("samples");
+
+    var newSample = {trackID: trackID, name: sample};
+    //var newSample = {info: "new sample", trackNum: trackID, sampleNum: sampleNum, sampleID: sampleID};
+    dbs.collection(projectID).insertOne(newSample, function(err, res) {
+      if(err) throw err;
+
+      callback(newSample);
+    });
+  }
+
+  /*
+    Returns an array of all samples that are in the collection of
+    'projectId' that satifies the query '{trackID: trackID}' in the
+    database 'samples' to a callback function.
+  */
+  function samplesFromIDs(db, projectId, trackId, callback) {
+    var query = {trackID: trackId};
+    var projectID = "project" + projectId.toString();
+    var dbs = db.db("samples");
+
+    dbs.collection(projectID).find({query}).toArray(function(err, res) {
+      if (err) throw err;
+      //console.log(res);
+      callback(res);
+    });
+  }
+
+  function samplesFromProjectID(db, projectId, callback) {
+    var projectID = "project" + projectId.toString();
+    var dbs = db.db("samples");
+
+    dbs.collection(projectID).find({}).toArray(function(err, res) {
+      if (err) throw err;
+      console.log(res);
+      callback(res);
+    });
   }
 
   /*
@@ -141,4 +231,6 @@ function setUpDB(db) {
     })
   }
 
-  module.exports = {setUpDB, addNewTrack, numOfTracks, tracksFromProjectID}
+  module.exports = {setUpDB,
+                    addNewTrack, numOfTracks, tracksFromProjectID,
+                    addNewSampleTrack, samplesFromIDs, samplesFromIDs, samplesFromProjectID}

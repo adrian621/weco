@@ -7,6 +7,7 @@ import {StyleSheet,
 import SampleBrowser from './samplebrowser/samplebrowser';
 import TrackManager from './trackmanager/trackmanager';
 import MovingSampleBox from './samplebrowser/movingsamplebox';
+import SocketIOClient from 'socket.io-client';
 
 export default class App extends React.Component {
   constructor(){
@@ -16,8 +17,11 @@ export default class App extends React.Component {
           pan: new Animated.ValueXY(),
           movingsample: '',
           sampleDroppedAt: [],
-          sampleBrowserWidth: 0
+          sampleBrowserWidth: 0,
+          socket: SocketIOClient('http://10.0.2.2:3000')
       };
+
+      //this.socket = SocketIOClient('http://10.0.2.2:3000');
   }
   componentWillMount(){
     // Add a listener for the delta value change
@@ -92,7 +96,7 @@ export default class App extends React.Component {
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
-            <TrackManager offsetX={this.state.sampleBrowserWidth} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
+            <TrackManager socket={this.state.socket} offsetX={this.state.sampleBrowserWidth} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
         </View>
         {this.display_movingsample()}
       </View>

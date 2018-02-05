@@ -41,6 +41,21 @@ io.on('connection', function (socket) {
     });
   });
 
+  socket.on('get-curr-samples', (projectInfo) => {
+    var projectID = projectInfo.projectID;
+    dbHandler.samplesFromProjectID(db, 1, (samples) => {
+      // _id is sent with all tracks, can be removed with a new function
+      // in jsonParser.js (not written yet tho')
+      socket.emit('on-connect-samples', samples);
+    });
+  });
+
+  socket.on('new-sample-track', (sampleInfo) => {
+    dbHandler.addNewSampleTrack(db, sampleInfo, (res) => {
+      socket.broadcast.emit('update-track', res);
+    });
+  });
+
   /*
     Event handler for 'new-track', see 'addNewTrack' documentation for
     more information on what happens on the server/database side when triggered.
