@@ -73,9 +73,25 @@ export default class TrackManager extends Component {
   }
 
   playSound = () =>{
-    const r = `./${this.state.sampleDropped[0]}` 
-    alert(r);
+    //const r = `./${this.state.sampleDropped[0]}` 
+    let samplesReq = [];
+    this.state.tracks.forEach(function(track){
+      switch(track.sample){
+        case 'sample1.wav': 
+          samplesReq.push(require('./sample1.mp3'));
+          break;
+        case 'sample2.wav':
+          samplesReq.push(require('./sample2.mp3'));
+          break; 
+        case 'sample3.wav': alert(3); break;
+          samplesReq.push(require('./sample3.mp3'));
+          break;
+        default: 
+        break;
+      }
+    });
 
+    //alert(samples[0]);
       const callback = (error, sound) => {
         if (error) {
           Alert.alert('error', error.message);
@@ -89,10 +105,10 @@ export default class TrackManager extends Component {
           sound.release();
         });
     };
-      if(this.state.sampleDropped[1] != undefined){
-      const sound = new Sound(require('./sample1.mp3'), error => callback(error, sound));
-      //const sound2 = new Sound(require('./sample1.mp3'), error => callback(error, sound));
-      }
+     
+     const sound = new Sound(samplesReq[0], error => callback(error, sound));
+     //const sound2 = new Sound(samplesReq[0], error => callback(error, sound));
+      
     }
 
   addNewTrack = () => {
