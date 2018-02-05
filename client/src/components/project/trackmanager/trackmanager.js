@@ -5,10 +5,15 @@ import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
 
 
+var Sound = require('react-native-sound');
+
+
 export default class TrackManager extends Component {
 
   constructor(props){
     super(props);
+
+    Sound.setCategory('Playback', true); // true = mixWithOthers
 
     this.state = {
         tracks: [],
@@ -67,6 +72,45 @@ export default class TrackManager extends Component {
     }
   }
 
+  playSound = () =>{
+    //const r = `./${this.state.sampleDropped[0]}` 
+    let samplesReq = [];
+    this.state.tracks.forEach(function(track){
+      switch(track.sample){
+        case 'sample1.wav': 
+          samplesReq.push(require('./sample1.mp3'));
+          break;
+        case 'sample2.wav':
+          samplesReq.push(require('./sample2.mp3'));
+          break; 
+        case 'sample3.wav': alert(3); break;
+          samplesReq.push(require('./sample3.mp3'));
+          break;
+        default: 
+        break;
+      }
+    });
+
+    //alert(samples[0]);
+      const callback = (error, sound) => {
+        if (error) {
+          Alert.alert('error', error.message);
+          return;
+        }
+        // Run optional pre-play callback
+        sound.play(() => {
+          // Success counts as getting to the end
+          //setTestState(testInfo, component, 'win');
+          // Release when it's done so we're not using up resources
+          sound.release();
+        });
+    };
+     
+     const sound = new Sound(samplesReq[0], error => callback(error, sound));
+     //const sound2 = new Sound(samplesReq[0], error => callback(error, sound));
+      
+    }
+
   addNewTrack = () => {
     let tracks = this.state.tracks;
     let trackId = tracks.length;
@@ -122,7 +166,7 @@ export default class TrackManager extends Component {
 
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-         <SoundControl onPlay = {()=>{}} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+         <SoundControl onPlay = {this.playSound} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
          </View>
         <View style = {styles.TrackMContainer}>
         <Text style = {{textAlign: 'center'}}>Track manager</Text>

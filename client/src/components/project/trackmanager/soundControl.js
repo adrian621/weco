@@ -7,7 +7,8 @@ export default class soundControl extends Component {
 
 
 play = () =>{
-alert("play")
+
+    //alert("play")
 
 }
 
@@ -31,7 +32,7 @@ render(){
             <Button 
             title= {"Play"}
             color = "black"
-            onPress = {this.play} 
+            onPress = {this.props.onPlay} 
             >
             </Button>
             </View>
