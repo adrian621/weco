@@ -14,47 +14,44 @@ play = () =>{
 
 stop = () =>{
     alert("stop")
-    
+
 }
 
 pause = () =>{
     alert("pause")
-    
+
     }
 
 render(){
 
     return(
         <View style ={styles.container}>
-        <View style = {{flex: 1,flexDirection: "row"}}>
-            
-            <View style = {{padding: 15}}>
-            <Button 
-            title= {"Play"}
-            color = "black"
-            onPress = {this.props.onPlay} 
-            >
-            </Button>
+            <View style={{flexDirection:'row'}}>
+              <View style = {{padding: 15}}>
+                <Button
+                title= {"Play"}
+                color = "black"
+                onPress = {this.props.onPlay}
+                >
+                </Button>
+              </View>
+              <View style = {{padding: 15}}>
+                <Button
+                title= {"Pause"}
+                color = "black"
+                onPress = {this.pause}
+                >
+                </Button>
+              </View>
+              <View style = {{padding: 15}}>
+                <Button
+                title= {"Stop"}
+                color = "black"
+                onPress = {this.stop}
+                >
+                </Button>
+              </View>
             </View>
-            <View style = {{padding: 15}}>
-            <Button 
-            
-            title= {"Pause"}
-            color = "black"
-            onPress = {this.pause} 
-            >
-            </Button>
-            </View>
-            <View style = {{padding: 15}}>
-            <Button 
-            style= {{flex: 1}} 
-            title= {"Stop"}
-            color = "black"
-            onPress = {this.stop} 
-            >
-            </Button>
-            </View>
-        </View>
         </View>
     );
 
@@ -64,12 +61,9 @@ render(){
 
 styles = StyleSheet.create({
 container:{
-    flex:1,
     backgroundColor: '#d9d9d9',
     borderWidth:1,
     borderColor:'black',
-    margin: 5,
-    alignItems:'center',
 
 }
 

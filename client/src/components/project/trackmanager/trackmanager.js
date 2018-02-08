@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, FlatList } from 'react-native';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
-
+import TimeLine from './timeline';
 
 var Sound = require('react-native-sound');
 
@@ -19,7 +19,11 @@ export default class TrackManager extends Component {
         tracks: [],
         sampleDropped:[],
         scrollOffset: 0,
-        offsetY: 0
+        offsetY: 0,
+        bpm: 96,
+        trackHeight: 0,
+        ntbHeight: 0,
+        totalHeight: 0
     };
 
     this.socket = this.props.socket;
@@ -73,42 +77,52 @@ export default class TrackManager extends Component {
   }
 
   playSound = () =>{
-    //const r = `./${this.state.sampleDropped[0]}` 
+    //const r = `./${this.state.sampleDropped[0]}`
     let samplesReq = [];
+    let date = new Date();
+
     this.state.tracks.forEach(function(track){
       switch(track.sample){
-        case 'sample1.wav': 
-          samplesReq.push(require('./sample1.mp3'));
+        case 'sample1.wav':
+          samplesReq.push(require('../../../audio/sample1.wav'));
           break;
         case 'sample2.wav':
-          samplesReq.push(require('./sample2.mp3'));
-          break; 
-        case 'sample3.wav': alert(3); break;
-          samplesReq.push(require('./sample3.mp3'));
+          samplesReq.push(require('../../../audio/sample2.wav'));
           break;
-        default: 
+        case 'sample3.wav':
+          samplesReq.push(require('../../../audio/sample3.wav'));
+          break;
+        default:
         break;
       }
     });
 
-    //alert(samples[0]);
-      const callback = (error, sound) => {
-        if (error) {
-          Alert.alert('error', error.message);
-          return;
-        }
-        // Run optional pre-play callback
+
+    let i = 0;
+    let time=date.getTime();
+
+    for(let sample of samplesReq){
+      const sound = new Sound(sample, error => callback(error, sound,time+2000));
+    }
+
+
+    const callback = (error, sound,time) => {
+      if (error) {
+        Alert.alert('error', error.message);
+        return;
+      }
+      // Run optional pre-play callback
+      let date_this = new Date();
+
+      setTimeout(function() {
         sound.play(() => {
-          // Success counts as getting to the end
-          //setTestState(testInfo, component, 'win');
-          // Release when it's done so we're not using up resources
+          console.log("DONE")
           sound.release();
         });
+      }, time-date_this.getTime());
+
     };
-     
-     const sound = new Sound(samplesReq[0], error => callback(error, sound));
-     //const sound2 = new Sound(samplesReq[0], error => callback(error, sound));
-      
+
     }
 
   addNewTrack = () => {
@@ -130,7 +144,7 @@ export default class TrackManager extends Component {
     tracks[id].width=width;
     tracks[id].y=id*(height+marginBottom);
 
-    this.setState({tracks:tracks});
+    this.setState({tracks:tracks,trackHeight:height+marginBottom});
 
   }
 
@@ -161,25 +175,43 @@ export default class TrackManager extends Component {
     this.setState({offsetY: e.nativeEvent.layout.height});
   }
 
-  render() {
-    return (
+  handleNTBLayout = (height) =>{
+    this.setState({ntbHeight: height});
+  }
+  handleTMLayout = (e) =>{
+    this.setState({tmHeight: e.nativeEvent.layout.height});
+  }
 
+  render() {
+    let tListHeight = 0;
+    if(this.state.tracks.length!=0){
+      tListHeight = this.state.tracks.length*this.state.trackHeight;
+
+      if(tListHeight > this.state.tmHeight-this.state.ntbHeight){
+        tListHeight=this.state.tmHeight-this.state.ntbHeight;
+      }
+    }
+
+
+    return (
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-         <SoundControl onPlay = {this.playSound} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
-         </View>
-        <View style = {styles.TrackMContainer}>
-        <Text style = {{textAlign: 'center'}}>Track manager</Text>
-        <FlatList
-          data={this.state.tracks}
-          extraData={this.state}
-          onScroll={this.handleScroll}
-          renderItem={({item}) => this.displayTrack(item)}
-          keyExtractor={(item, index) => index}
-        />
-        <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
+          <SoundControl onPlay = {this.playSound} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
         </View>
+        <TimeLine></TimeLine>
+        <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
+          <View style={{height:tListHeight}}>
+            <FlatList
+              data={this.state.tracks}
+              extraData={this.state}
+              onScroll={this.handleScroll}
+              renderItem={({item}) => this.displayTrack(item)}
+              keyExtractor={(item, index) => index}
+            />
 
+          </View>
+          <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
+        </View>
       </View>
     );
   }
@@ -190,11 +222,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#d9d9d9'
   },
-  flatListStyle:{
-    height: '100%'
-  },
   SoundControlContainer:{
-    flex: 1
+    alignItems: 'center',
+    marginBottom:15
   },
   TrackMContainer: {
     flex: 4
