@@ -6,7 +6,7 @@ export default class TimeLine extends Component {
   constructor(){
     super();
     this.state = {
-      points:4,
+      points:3,
       width: 0,
       pWidth: 0
     };
