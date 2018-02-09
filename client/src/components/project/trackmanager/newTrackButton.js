@@ -4,17 +4,21 @@ import { Button } from 'react-native';
 
 export default class newTrackButton extends Component {
 
+    handleLayout = (e)=>{
+      this.props.onLayout(e.nativeEvent.layout.height);
+    }
+
     render() {
-    return (
-    <View style = {styles.container}>
-    <Button
-    onPress={this.props.OnNewTrack}
-    title="Add track"
-    color="gray"
-    accessibilityLabel="Learn more about this purple button"
-    />
-    </View>
-    );
+      return (
+        <View onLayout={this.handleLayout} style = {styles.container}>
+          <Button
+          onPress={this.props.OnNewTrack}
+          title="Add track"
+          color="gray"
+          accessibilityLabel="Learn more about this purple button"
+          />
+        </View>
+      );
   }
 }
 

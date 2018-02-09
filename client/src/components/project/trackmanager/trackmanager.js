@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, FlatList } from 'react-native';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
-
+import TimeLine from './timeline';
 
 var Sound = require('react-native-sound');
 
@@ -18,8 +18,15 @@ export default class TrackManager extends Component {
     this.state = {
         tracks: [],
         sampleDropped:[],
+        toPlay: [],
+        loadedSamples: [],
+        loadedSamplesMap: [],
         scrollOffset: 0,
-        offsetY: 0
+        offsetY: 0,
+        bpm: 96,
+        trackHeight: 0,
+        ntbHeight: 0,
+        totalHeight: 0
     };
 
     this.socket = this.props.socket;
@@ -49,7 +56,6 @@ export default class TrackManager extends Component {
     });
 
     this.socket.on('update-track', (res) => {
-      //alert(res.name);
       let updated_tracks = [...this.state.tracks];
       let sampleName = res.name;
       let trackID = res.trackID;
@@ -61,6 +67,7 @@ export default class TrackManager extends Component {
   }
 
   componentWillReceiveProps(nextProps){
+    //Handle sampledrop
     if(nextProps.sampleDroppedAt.length!=0){
         let curr=this.props.sampleDroppedAt;
         let next=nextProps.sampleDroppedAt;
@@ -72,44 +79,65 @@ export default class TrackManager extends Component {
     }
   }
 
-  playSound = () =>{
-    //const r = `./${this.state.sampleDropped[0]}` 
-    let samplesReq = [];
-    this.state.tracks.forEach(function(track){
-      switch(track.sample){
-        case 'sample1.wav': 
-          samplesReq.push(require('./sample1.mp3'));
-          break;
-        case 'sample2.wav':
-          samplesReq.push(require('./sample2.mp3'));
-          break; 
-        case 'sample3.wav': alert(3); break;
-          samplesReq.push(require('./sample3.mp3'));
-          break;
-        default: 
+  loadSample = (sample) =>{
+    //If sample already loaded, return
+    let loadedSamplesMap = this.state.loadedSamplesMap;
+    if(sample in loadedSamplesMap){
+      return;
+    }
+
+    let sampleFile=0;
+    switch(sample){
+      case 'sample1.wav':
+        sampleFile=(require('../../../audio/sample1.wav'));
         break;
-      }
+      case 'sample2.wav':
+        sampleFile=(require('../../../audio/sample2.wav'));
+        break;
+      case 'sample3.wav':
+        sampleFile=(require('../../../audio/sample3.wav'));
+        break;
+      default:
+      break;
+    }
+    let loadedSamples = this.state.loadedSamples;
+
+    let context = this;
+    let sPromise =  new Promise(function(resolve, reject) {
+      const sound = new Sound(sampleFile, error => context.loadCallback(error, sound));
+      resolve(sound);
     });
 
-    //alert(samples[0]);
-      const callback = (error, sound) => {
-        if (error) {
-          Alert.alert('error', error.message);
-          return;
-        }
-        // Run optional pre-play callback
-        sound.play(() => {
-          // Success counts as getting to the end
-          //setTestState(testInfo, component, 'win');
-          // Release when it's done so we're not using up resources
-          sound.release();
-        });
-    };
-     
-     const sound = new Sound(samplesReq[0], error => callback(error, sound));
-     //const sound2 = new Sound(samplesReq[0], error => callback(error, sound));
-      
+    loadedSamples.push(sPromise);
+    loadedSamplesMap.push(sample);
+    this.setState({loadedSamples:loadedSamples,loadedSamplesMap:loadedSamplesMap}, ()=>{
+
+    });
+  }
+  
+  loadCallback = (error,sound) =>{
+    if (error) {
+      Alert.alert('error', error.message);
+      return 0;
     }
+  }
+
+  playSounds = () =>{
+    let context = this;
+    //Play all sounds when they are loaded
+    Promise.all(this.state.loadedSamples).then(function(sounds) {
+      for(let sound of sounds){
+        context.playSound(sound);
+      }
+    });
+  }
+
+  playSound = (sound) =>{
+    sound.play(() => {
+      //Not releasing. Might be undesirable.
+    });
+  }
+
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
@@ -130,7 +158,7 @@ export default class TrackManager extends Component {
     tracks[id].width=width;
     tracks[id].y=id*(height+marginBottom);
 
-    this.setState({tracks:tracks});
+    this.setState({tracks:tracks,trackHeight:height+marginBottom});
 
   }
 
@@ -138,7 +166,7 @@ export default class TrackManager extends Component {
     this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
   }
 
-  onChange = (data) => {
+  handleSampleDrop = (data) => {
     let trackID = data.trackID;
     let sample = data.sample;
 
@@ -147,13 +175,17 @@ export default class TrackManager extends Component {
     updated_tracks[trackID].sample = sample;
 
     this.setState({tracks: updated_tracks});
+
+    //Load sample
+    this.loadSample(sample);
   }
+
 
   displayTrack = (item) =>{
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
             offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
-            id={item.trackId} sample={item.sample} onChange={this.onChange}>
+            id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}>
            </Track>;
   }
 
@@ -161,25 +193,43 @@ export default class TrackManager extends Component {
     this.setState({offsetY: e.nativeEvent.layout.height});
   }
 
-  render() {
-    return (
+  handleNTBLayout = (height) =>{
+    this.setState({ntbHeight: height});
+  }
+  handleTMLayout = (e) =>{
+    this.setState({tmHeight: e.nativeEvent.layout.height});
+  }
 
+  render() {
+    let tListHeight = 0;
+    if(this.state.tracks.length!=0){
+      tListHeight = this.state.tracks.length*this.state.trackHeight;
+
+      if(tListHeight > this.state.tmHeight-this.state.ntbHeight){
+        tListHeight=this.state.tmHeight-this.state.ntbHeight;
+      }
+    }
+
+
+    return (
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-         <SoundControl onPlay = {this.playSound} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
-         </View>
-        <View style = {styles.TrackMContainer}>
-        <Text style = {{textAlign: 'center'}}>Track manager</Text>
-        <FlatList
-          data={this.state.tracks}
-          extraData={this.state}
-          onScroll={this.handleScroll}
-          renderItem={({item}) => this.displayTrack(item)}
-          keyExtractor={(item, index) => index}
-        />
-        <NewTrackButton OnNewTrack = {this.addNewTrack}></NewTrackButton>
+          <SoundControl onPlay = {this.playSounds} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
         </View>
+        <TimeLine></TimeLine>
+        <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
+          <View style={{height:tListHeight}}>
+            <FlatList
+              data={this.state.tracks}
+              extraData={this.state}
+              onScroll={this.handleScroll}
+              renderItem={({item}) => this.displayTrack(item)}
+              keyExtractor={(item, index) => index}
+            />
 
+          </View>
+          <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
+        </View>
       </View>
     );
   }
@@ -190,11 +240,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#d9d9d9'
   },
-  flatListStyle:{
-    height: '100%'
-  },
   SoundControlContainer:{
-    flex: 1
+    alignItems: 'center',
+    marginBottom:15
   },
   TrackMContainer: {
     flex: 4
