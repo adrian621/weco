@@ -163,11 +163,27 @@ export default class TrackManager extends Component {
     this.setState({tracks: updated_tracks});
   }
 
+  removeTrack = (id) =>{
+   // console.log('inRemove');
+    tracks = this.state.tracks;
+
+    for(let i = 0; i < tracks.length; i++){
+    if (tracks[i].trackId == id){
+      console.log(tracks.length);
+      tracks.splice(i,1);
+      console.log(tracks.length);
+      this.setState({tracks:tracks});
+    }
+    }
+  }
+
   displayTrack = (item) =>{
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
             offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
-            id={item.trackId} sample={item.sample} onChange={this.onChange}>
+            id={item.trackId} sample={item.sample} onChange={this.onChange}
+            removeTrack = {this.removeTrack}
+            >
            </Track>;
   }
 
