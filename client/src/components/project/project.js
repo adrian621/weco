@@ -18,7 +18,7 @@ export default class App extends React.Component {
           movingsample: '',
           sampleDroppedAt: [],
           sampleBrowserWidth: 0,
-          socket: SocketIOClient('http://10.0.2.2:3000')
+          socket: SocketIOClient('https://wecoserver.herokuapp.com/')
       };
 
       //this.socket = SocketIOClient('http://10.0.2.2:3000');
