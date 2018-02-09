@@ -114,7 +114,7 @@ export default class TrackManager extends Component {
 
     });
   }
-  
+
   loadCallback = (error,sound) =>{
     if (error) {
       Alert.alert('error', error.message);
@@ -216,7 +216,7 @@ export default class TrackManager extends Component {
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
           <SoundControl onPlay = {this.playSounds} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
         </View>
-        <TimeLine></TimeLine>
+        <TimeLine bars={1}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
           <View style={{height:tListHeight}}>
             <FlatList
