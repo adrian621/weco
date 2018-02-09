@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, FlatList } from 'react-native';
 
 export default class Track extends Component {
   constructor(props){
@@ -7,7 +7,9 @@ export default class Track extends Component {
     this.state = {
         width: 0,
         height: 0,
-        sample: ''
+        scrollOffset: 0,
+        sample: '',
+        samples: [{sample: 'a'}, {sample: 'b'}, {sample: 'c'}, {sample: 'd'}, {sample: 'e'}, {sample: 'f'}]
     };
 
     this.socket = this.props.socket;
@@ -61,10 +63,25 @@ export default class Track extends Component {
     this.props.onLayout(layout.height,layout.width,10,this.props.id);
   }
 
+  handleScroll = (e) =>{
+    this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
+  }
+
+  displayTrack = (item) =>{
+    return <Text style = {styles.sampleContainer}> {item.sample} </Text>
+  }
+
   render() {
     return (
       <View style={styles.container} onLayout={this.handleLayout}>
-        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} {'\n'} ({this.state.sample})</Text>
+        <FlatList
+          data={this.state.samples}
+          horizontal={true}
+          extraData={this.state}
+          onScroll={this.handleScroll}
+          renderItem={({item}) => this.displayTrack(item)}
+          keyExtractor={(item, index) => index}
+        />
       </View>
     );
   }
@@ -79,4 +96,12 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 10
   },
+
+  sampleContainer: {
+    textAlign: 'center',
+    borderWidth:1,
+    borderColor: 'black',
+    height: 50,
+    width: 100,
+  }
 });
