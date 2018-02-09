@@ -39,9 +39,9 @@ let styles = StyleSheet.create({
   sampleBox: {
     backgroundColor: "skyblue",
     height: 20,
-    borderRadius: 1,
-    borderWidth:1,
-    borderColor: 'black',
+    // borderRadius: 1,
+    // borderWidth:1,
+    // borderColor: 'black',
     marginBottom: 10
   },
   sampleText: {

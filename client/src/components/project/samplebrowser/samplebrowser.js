@@ -10,12 +10,14 @@ export default class SampleBrowser extends Component {
     super(props);
     this.state = {files: [], yOffset: 0}
   }
+
   componentDidMount(){
+    //this.clear_files();
     this.write_dummy_samples();
   }
 
   write_dummy_samples() {
-    for(var i=1;i<10;i++){
+    for(var i=1;i<=3;i++){
       let sample = '/sample'+i+'.wav';
       RNFS.writeFile(RNFS.DocumentDirectoryPath+sample, 'tomt :(', 'utf8')
         .then((success) => {
@@ -36,12 +38,36 @@ export default class SampleBrowser extends Component {
     RNFS.readdir(RNFS.DocumentDirectoryPath) // On Android, use "RNFS.DocumentDirectoryPath" (MainBundlePath is not defined)
       .then((result) => {
         let files = [];
-
+        let j=0;
         result.forEach((value,i)=>{
-          files.push({key: value,index:i});
+          if(value!='ReactNativeDevBundle.js'){
+            files.push({key: value,index:j});
+            j=j+1;
+          }
         })
 
         this.update_files(files);
+
+      })
+      .catch((err) => {
+        console.log(err.message, err.code);
+      });
+  }
+
+  clear_files() {
+    RNFS.readdir(RNFS.DocumentDirectoryPath) // On Android, use "RNFS.DocumentDirectoryPath" (MainBundlePath is not defined)
+      .then((result) => {
+        result.forEach((value,i)=>{
+          RNFS.unlink(RNFS.DocumentDirectoryPath+'/'+value)
+            .then(() => {
+              console.log('FILE DELETED');
+            })
+            // `unlink` will throw an error, if the item to unlink does not exist
+            .catch((err) => {
+              console.log(err.message);
+            });
+        })
+
 
       })
       .catch((err) => {
@@ -86,7 +112,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#d9d9d9',
-    borderRightWidth:2,
+    borderRightWidth:0,
     borderColor: 'black',
   }
 });
