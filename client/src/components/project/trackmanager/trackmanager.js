@@ -105,9 +105,7 @@ export default class TrackManager extends Component {
 
   loadSounds = ()=>{
     let loadedSounds=[];
-    let sounds=[];
     let context=this;
-    let sample=0;
 
     for(let file of this.state.toPlay){
       let sPromise =  new Promise(function(resolve, reject) {
