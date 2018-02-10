@@ -14,6 +14,7 @@ export default class App extends React.Component {
       super();
 
       this.state = {
+          files: [],
           pan: new Animated.ValueXY(),
           movingsample: '',
           sampleDroppedAt: [],
@@ -70,6 +71,10 @@ export default class App extends React.Component {
     this.setState({sampleDroppedAt:[sample,x,y]});
   }
 
+  handleFilesLoaded = (files) =>{
+    this.setState({files:files});
+  }
+
   display_movingsample() {
     const panStyle = {
         transform: this.state.pan.getTranslateTransform()
@@ -92,11 +97,13 @@ export default class App extends React.Component {
       <View style={styles.container}>
 
         <View style={{flex: 2}} onLayout={this.handleLayout}>
-          <SampleBrowser onRelease={this.handleSampleDrop} onSampleMove={this.handleSampleMove}></SampleBrowser>
+          <SampleBrowser onRelease={this.handleSampleDrop} onSampleMove={this.handleSampleMove}
+            onFilesLoaded={this.handleFilesLoaded}></SampleBrowser>
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
-            <TrackManager socket={this.state.socket} offsetX={this.state.sampleBrowserWidth} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
+            <TrackManager socket={this.state.socket} offsetX={this.state.sampleBrowserWidth}
+              files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
         </View>
         {this.display_movingsample()}
       </View>

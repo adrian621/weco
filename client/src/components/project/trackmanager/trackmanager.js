@@ -17,10 +17,10 @@ export default class TrackManager extends Component {
 
     this.state = {
         tracks: [],
-        sampleDropped:[],
+        sampleDropped:{},
         toPlay: [],
-        loadedSamples: [],
-        loadedSamplesMap: [],
+        soundFiles: {},
+        loadedSounds: [],
         scrollOffset: 0,
         offsetY: 0,
         bpm: 96,
@@ -32,7 +32,6 @@ export default class TrackManager extends Component {
     this.socket = this.props.socket;
 
     this.socket.on('on-connect', (res) => {
-      //alert(tracks.length);
       this.setState({tracks: res}, () => {
         this.socket.emit('get-curr-samples', {projectID: "project1"});
       });
@@ -45,7 +44,7 @@ export default class TrackManager extends Component {
         let sample = res[i].name;
         tracks[trackID].sample = sample;
       }
-      this.setState({tracks: tracks});
+      this.setState({tracks: tracks},this.generateToPlay());
     });
 
     this.socket.on('get-new-track', (res) => {
@@ -62,7 +61,7 @@ export default class TrackManager extends Component {
 
       updated_tracks[trackID].sample = sampleName;
 
-      this.setState({tracks: updated_tracks});
+      this.setState({tracks: updated_tracks},this.generateToPlay());
     });
   }
 
@@ -77,63 +76,72 @@ export default class TrackManager extends Component {
           }
         }
     }
+    //Load files only if new ones have been added and there exists files
+    if(nextProps.files.length!=0 && JSON.stringify(nextProps.files)!=JSON.stringify(this.props.files)){
+      this.loadSoundFiles(nextProps.files);
+    }
   }
 
-  loadSample = (sample) =>{
-    //If sample already loaded, return
-    let loadedSamplesMap = this.state.loadedSamplesMap;
-    if(sample in loadedSamplesMap){
-      return;
+  loadSoundFiles = (files) =>{
+    //Load sound files here
+    let soundFiles = {};
+    for(let file of files){
+      switch(file){
+        case 'sample1.wav':
+          soundFiles[file]=(require('../../../audio/sample1.wav'));
+          break;
+        case 'sample2.wav':
+          soundFiles[file]=(require('../../../audio/sample2.wav'));
+          break;
+        case 'sample3.wav':
+          soundFiles[file]=(require('../../../audio/sample3.wav'));
+          break;
+        default:
+        break;
+      }
+    }
+    this.setState({soundFiles:soundFiles})
+  }
+
+  loadSounds = ()=>{
+    let loadedSounds=[];
+    let sounds=[];
+    let context=this;
+    let sample=0;
+
+    for(let file of this.state.toPlay){
+      let sPromise =  new Promise(function(resolve, reject) {
+        const sound = new Sound(context.state.soundFiles[file], error => context.loadCallback(error, sound,resolve,reject));
+      });
+      loadedSounds.push(sPromise);
     }
 
-    let sampleFile=0;
-    switch(sample){
-      case 'sample1.wav':
-        sampleFile=(require('../../../audio/sample1.wav'));
-        break;
-      case 'sample2.wav':
-        sampleFile=(require('../../../audio/sample2.wav'));
-        break;
-      case 'sample3.wav':
-        sampleFile=(require('../../../audio/sample3.wav'));
-        break;
-      default:
-      break;
-    }
-    let loadedSamples = this.state.loadedSamples;
-
-    let context = this;
-    let sPromise =  new Promise(function(resolve, reject) {
-      const sound = new Sound(sampleFile, error => context.loadCallback(error, sound));
-      resolve(sound);
-    });
-
-    loadedSamples.push(sPromise);
-    loadedSamplesMap.push(sample);
-    this.setState({loadedSamples:loadedSamples,loadedSamplesMap:loadedSamplesMap}, ()=>{
-
+    this.setState({loadedSounds:loadedSounds}, ()=>{
     });
   }
 
-  loadCallback = (error,sound) =>{
+  loadCallback = (error,sound,resolve,reject) =>{
     if (error) {
-      Alert.alert('error', error.message);
-      return 0;
+      reject(sound)
+    }
+    else{
+      console.log("loaded:",sound)
+      resolve(sound)
     }
   }
 
   playSounds = () =>{
-    let context = this;
     //Play all sounds when they are loaded
-    Promise.all(this.state.loadedSamples).then(function(sounds) {
+    let context = this;
+    Promise.all(this.state.loadedSounds).then(function(sounds) {
       for(let sound of sounds){
         context.playSound(sound);
       }
-    });
+    }).catch((error)=>{alert("Failed to load play some sound(s)")});
   }
 
   playSound = (sound) =>{
-    sound.play(() => {
+    sound.play((success) => {
       //Not releasing. Might be undesirable.
     });
   }
@@ -174,10 +182,17 @@ export default class TrackManager extends Component {
 
     updated_tracks[trackID].sample = sample;
 
-    this.setState({tracks: updated_tracks});
+    this.setState({tracks: updated_tracks}, this.generateToPlay());
+  }
 
-    //Load sample
-    this.loadSample(sample);
+  generateToPlay = () =>{
+    let toPlay = [];
+    for (let track of this.state.tracks){
+      if(track.sample!=''){
+        toPlay.push(track.sample);
+      }
+    }
+    this.setState({toPlay: toPlay},()=>this.loadSounds());
   }
 
 
@@ -192,7 +207,6 @@ export default class TrackManager extends Component {
   handleSCLayout = (e) =>{
     this.setState({offsetY: e.nativeEvent.layout.height});
   }
-
   handleNTBLayout = (height) =>{
     this.setState({ntbHeight: height});
   }
