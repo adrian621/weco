@@ -26,7 +26,8 @@ export default class TrackManager extends Component {
         bpm: 96,
         trackHeight: 0,
         ntbHeight: 0,
-        totalHeight: 0
+        totalHeight: 0,
+        scrolledTrackID: 0,
     };
 
     this.socket = this.props.socket;
@@ -114,7 +115,7 @@ export default class TrackManager extends Component {
 
     });
   }
-  
+
   loadCallback = (error,sound) =>{
     if (error) {
       Alert.alert('error', error.message);
@@ -166,6 +167,10 @@ export default class TrackManager extends Component {
     this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
   }
 
+  handleTrackScroll = (x, id) => {
+    this.setState({scrollOffsetX: x, scrolledTrackID: id});
+  }
+
   handleSampleDrop = (data) => {
     let trackID = data.trackID;
     let sample = data.sample;
@@ -180,17 +185,20 @@ export default class TrackManager extends Component {
     this.loadSample(sample);
   }
 
-
   displayTrack = (item) =>{
-    return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
+    return <Track socket={this.socket} onRef={ref => (this.sampleBox = ref)}
+            scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
+            scrollOffsetX={this.state.scrollOffsetX} scrollID={this.state.scrolledTrackID}
             offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
             droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
-            id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}>
+            id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}
+            handleTrackScroll={this.handleTrackScroll}>
            </Track>;
   }
 
   handleSCLayout = (e) =>{
-    this.setState({offsetY: e.nativeEvent.layout.height});
+    this.setState({offsetY: e.nativeEvent.layout.height,
+                    offsetX: e.nativeEvent.layout.width});
   }
 
   handleNTBLayout = (height) =>{
