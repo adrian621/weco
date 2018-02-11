@@ -19,6 +19,7 @@ export default class TrackManager extends Component {
         tracks: [],
         sampleDropped:{},
         toPlay: [],
+        sounds: [],
         soundFiles: {},
         loadedSounds: [],
         scrollOffset: 0,
@@ -106,11 +107,13 @@ export default class TrackManager extends Component {
 
   loadSounds = ()=>{
     let loadedSounds=[];
+
     let context=this;
 
     for(let file of this.state.toPlay){
       let sPromise =  new Promise(function(resolve, reject) {
-        const sound = new Sound(context.state.soundFiles[file], error => context.loadCallback(error, sound,resolve,reject));
+        const sound = new Sound(context.state.soundFiles[file], error => context.loadCallback(error, sound,file,resolve,reject));
+
       });
       loadedSounds.push(sPromise);
     }
@@ -119,14 +122,20 @@ export default class TrackManager extends Component {
     });
   }
 
-  loadCallback = (error,sound,resolve,reject) =>{
-    if (error) {
-      reject(sound)
-    }
-    else{
-      console.log("loaded:",sound)
-      resolve(sound)
-    }
+  loadCallback = (error,sound,file,resolve,reject) =>{
+    let sounds = this.state.sounds;
+    sounds[file]=sound;
+
+    this.setState({sounds:sounds}, ()=>{
+      if (error) {
+        reject(0)
+        return;
+      }
+      else{
+        resolve(sound)
+      }
+    })
+
   }
 
   playSounds = () =>{
@@ -140,7 +149,13 @@ export default class TrackManager extends Component {
   }
 
   playSound = (sound) =>{
+    if(!sound.isLoaded()){
+      alert("not loaded when played")
+    }
     sound.play((success) => {
+      if(!success){
+        console.log("failed to play: ", sound)
+      }
       //Not releasing. Might be undesirable.
     });
   }
@@ -188,14 +203,26 @@ export default class TrackManager extends Component {
     this.setState({tracks: updated_tracks}, this.generateToPlay());
   }
 
+  releaseSounds = (samples)=>{
+    let sounds = this.state.sounds;
+    for(let sample of samples){
+      sounds[sample].release();
+      delete sounds[sample];
+    }
+  }
   generateToPlay = () =>{
-    let toPlay = [];
+    let newToPlay = [];
     for (let track of this.state.tracks){
       if(track.sample!=''){
-        toPlay.push(track.sample);
+        newToPlay.push(track.sample);
       }
     }
-    this.setState({toPlay: toPlay},()=>this.loadSounds());
+
+    //Release sounds that were on track(s) but have now been replaced/removed
+    let deltaToPlay = this.state.toPlay.filter(x => !newToPlay.includes(x));
+    this.releaseSounds(deltaToPlay);
+
+    this.setState({toPlay: newToPlay},()=>this.loadSounds());
   }
 
   displayTrack = (item) =>{
