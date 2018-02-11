@@ -43,7 +43,12 @@ export default class TrackManager extends Component {
       for(let i=0; i<res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
-        tracks[trackID].sample = sample;
+        //tracks[trackID].sample = sample;
+        for(let i = 0; i < tracks.length; i++){
+          if(tracks[i].trackId == trackID){
+            tracks[i].sample = sample;
+          }
+        }
       }
       this.setState({tracks: tracks});
     });
@@ -55,13 +60,32 @@ export default class TrackManager extends Component {
       this.setState({tracks: tracks});
     });
 
+    this.socket.on('get-del-track', (res)  => {
+      
+      let updated_tracks = this.state.tracks;
+      let trackID = res;
+      for(let i = 0; i < updated_tracks.length; i++){
+        if(updated_tracks[i].trackId == trackID){
+          tracks.splice(i,1);
+          this.setState({tracks:updated_tracks});
+        }
+      }
+    
+    
+    });
+
+
     this.socket.on('update-track', (res) => {
       let updated_tracks = [...this.state.tracks];
       let sampleName = res.name;
       let trackID = res.trackID;
 
-      updated_tracks[trackID].sample = sampleName;
-
+      //updated_tracks[trackID].sample = sampleName;
+      for(let i = 0; i < updated_tracks.length; i++){
+        if(updated_tracks[i].trackId == trackID){
+          updated_tracks[i].sample = sampleName;
+        }
+      }
       this.setState({tracks: updated_tracks});
     });
   }
@@ -141,7 +165,8 @@ export default class TrackManager extends Component {
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
-    let trackId = tracks.length;
+    //let trackId = tracks.length; 
+    let trackId = Math.floor(Math.random() * 1000000000) + 1 ;
 
     tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
 
@@ -150,13 +175,15 @@ export default class TrackManager extends Component {
     });
   }
 
-  handleTrackLayout = (height,width,marginBottom,id) =>{
-    let y = id*(height+marginBottom);
+  handleTrackLayout = (height,width,marginBottom,placeInList) =>{
+    //alert(placeInList);
+    let y = placeInList*(height+marginBottom);
 
     let tracks = this.state.tracks;
-    tracks[id].height=height;
-    tracks[id].width=width;
-    tracks[id].y=id*(height+marginBottom);
+
+    tracks[placeInList].height=height;
+    tracks[placeInList].width=width;
+    tracks[placeInList].y=placeInList*(height+marginBottom);
 
     this.setState({tracks:tracks,trackHeight:height+marginBottom});
 
@@ -172,7 +199,12 @@ export default class TrackManager extends Component {
 
     let updated_tracks = [...this.state.tracks];
 
-    updated_tracks[trackID].sample = sample;
+    //updated_tracks[trackID].sample = sample;
+    for(let i = 0; i< tracks.length; i++){
+      if(tracks[i].trackId == trackID){
+        tracks[i].sample = sample;
+      }
+    }
 
     this.setState({tracks: updated_tracks});
 
@@ -181,11 +213,41 @@ export default class TrackManager extends Component {
   }
 
 
+  removeTrack = (id) =>{
+    tracks = this.state.tracks;
+    this.socket.emit('del-track', {trackID: id, projectID: 1});
+    
+    
+    //Force the layout method to be called for every track that is not deleted.
+    this.setState({tracks:[]});
+    
+    for(let i = 0; i < tracks.length; i++){
+    if (tracks[i].trackId == id){
+      tracks.splice(i,1);
+      this.setState({tracks:tracks});
+    }
+    }
+
+  }
+
+
   displayTrack = (item) =>{
+    tracks = this.state.tracks;
+    for(let i = 0; i < tracks.length; i++){
+    if (item.trackId == tracks[i].trackId){
+      y = this.state.tracks[i].y;
+      placeInList = i;
+    }
+    }
+
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
-            offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
-            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
-            id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}>
+
+            offsetY={this.state.offsetY} y={y}
+            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout} placeInList = {placeInList}
+            id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}
+            removeTrack = {this.removeTrack}
+            >
+
            </Track>;
   }
 

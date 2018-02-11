@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 
 export default class Track extends Component {
   constructor(props){
@@ -11,6 +11,8 @@ export default class Track extends Component {
     };
 
     this.socket = this.props.socket;
+
+
 
   }
   componentWillReceiveProps(nextProps){
@@ -35,6 +37,7 @@ export default class Track extends Component {
     this.handleSampleDrop(droppedSample);
   }*/
 
+  
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
     let sampleX = sampleData[1]-this.props.offsetX;
@@ -56,15 +59,25 @@ export default class Track extends Component {
   }
 
   handleLayout = (event) =>{
+    //alert('Layout change invoked for track in list:' + this.props.placeInList)
     let layout = event.nativeEvent.layout;
     this.setState({height: layout.height, width: layout.width})
-    this.props.onLayout(layout.height,layout.width,10,this.props.id);
+    this.props.onLayout(layout.height,layout.width,10,this.props.placeInList);
   }
 
+  onLongPress = () =>{
+    
+    this.props.removeTrack(this.props.id);
+  }
+  
   render() {
+    
+    
     return (
       <View style={styles.container} onLayout={this.handleLayout}>
-        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} {'\n'} ({this.state.sample})</Text>
+        <TouchableOpacity onLongPress={this.onLongPress}>
+        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} PlaceInlist: {this.props.placeInList} {'\n'} ({this.state.sample})</Text>
+        </TouchableOpacity>
       </View>
     );
   }
