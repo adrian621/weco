@@ -57,6 +57,21 @@ export default class TrackManager extends Component {
       this.setState({tracks: tracks});
     });
 
+    this.socket.on('get-del-track', (res)  => {
+      
+      let updated_tracks = this.state.tracks;
+      let trackID = res;
+      for(let i = 0; i < updated_tracks.length; i++){
+        if(updated_tracks[i].trackId == trackID){
+          tracks.splice(i,1);
+          this.setState({tracks:updated_tracks});
+        }
+      }
+    
+    
+    });
+
+
     this.socket.on('update-track', (res) => {
       //alert(res.name);
       let updated_tracks = [...this.state.tracks];
@@ -137,7 +152,7 @@ export default class TrackManager extends Component {
   addNewTrack = () => {
     let tracks = this.state.tracks;
     //let trackId = tracks.length; 
-    let trackId = Math.floor(Math.random() * 10000000) + 1 ;
+    let trackId = Math.floor(Math.random() * 1000000000) + 1 ;
 
     tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
 
@@ -182,6 +197,7 @@ export default class TrackManager extends Component {
 
   removeTrack = (id) =>{
     tracks = this.state.tracks;
+    this.socket.emit('del-track', {trackID: id, projectID: 1});
     
     
     //Force the layout method to be called for every track that is not deleted.
