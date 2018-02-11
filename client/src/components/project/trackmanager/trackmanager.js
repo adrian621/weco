@@ -119,6 +119,7 @@ export default class TrackManager extends Component {
     }
 
     this.setState({loadedSounds:loadedSounds}, ()=>{
+      console.log("loaded",loadedSounds)
     });
   }
 
@@ -138,10 +139,17 @@ export default class TrackManager extends Component {
 
   }
 
+  play = ()=>{
+    this.playSounds().then(()=>{
+      this.loadSounds();
+    }).catch((error)=>{
+      console.log("play error", error)
+    });
+  }
   playSounds = () =>{
     //Play all sounds when they are loaded
     let context = this;
-    Promise.all(this.state.loadedSounds).then(function(sounds) {
+    return Promise.all(this.state.loadedSounds).then(function(sounds) {
       for(let sound of sounds){
         context.playSound(sound);
       }
@@ -153,7 +161,9 @@ export default class TrackManager extends Component {
       alert("not loaded when played")
     }
     sound.play((success) => {
+      sound.release();
       if(!success){
+        //Kör om alla ljud igen här tills de funkar
         console.log("failed to play: ", sound)
       }
       //Not releasing. Might be undesirable.
@@ -210,6 +220,14 @@ export default class TrackManager extends Component {
       delete sounds[sample];
     }
   }
+
+  // releaseAll=()=>{
+  //   let sounds=this.state.sounds;
+  //   for(let key in sounds){
+  //     sounds[key].release();
+  //   }
+  //   this.setState({sounds:{}});
+  // }
   generateToPlay = () =>{
     let newToPlay = [];
     for (let track of this.state.tracks){
@@ -261,7 +279,7 @@ export default class TrackManager extends Component {
     return (
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-          <SoundControl onPlay = {this.playSounds} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+          <SoundControl onPlay = {this.play} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
         </View>
         <TimeLine bars={1}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
