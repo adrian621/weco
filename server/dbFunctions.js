@@ -233,4 +233,4 @@ function setUpDB(db) {
 
   module.exports = {setUpDB,
                     addNewTrack, numOfTracks, tracksFromProjectID,
-                    addNewSampleTrack, samplesFromIDs, samplesFromIDs, samplesFromProjectID}
+                    addNewSampleTrack, samplesFromIDs, samplesFromIDs, samplesFromProjectID, removeTrack}

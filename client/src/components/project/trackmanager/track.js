@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 
 export default class Track extends Component {
   constructor(props){
@@ -18,12 +18,10 @@ export default class Track extends Component {
 
     this.socket = this.props.socket;
 
+
+
   }
   componentWillReceiveProps(nextProps){
-    this.setState({sample: nextProps.sample}, () => {
-      this.updateOffsetX(nextProps.scrollOffsetX);
-    });
-
     if(nextProps.droppedSample==='undefined'){
       return;
     }
@@ -42,6 +40,7 @@ export default class Track extends Component {
   /*componentWillUpdate(droppedSample) {
     this.handleSampleDrop(droppedSample);
   }*/
+
 
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
@@ -74,58 +73,25 @@ export default class Track extends Component {
   }
 
   handleLayout = (event) =>{
+    //alert('Layout change invoked for track in list:' + this.props.placeInList)
     let layout = event.nativeEvent.layout;
-    this.setState({height: layout.height, width: layout.width});
-    this.setState({swidth: event.nativeEvent.layout.width});
-    this.props.onLayout(layout.height,layout.width,10,this.props.id);
+    this.setState({height: layout.height, width: layout.width})
+    this.props.onLayout(layout.height,layout.width,10,this.props.placeInList);
   }
 
-  handleScroll = (e) =>{
-    /* "OLD" not working properly with several 'tracks'...
-        kommentera ut allt här under om du bara vill scrolla
-        de separat! */
-    this.setState({scrollOffset: e.nativeEvent.contentOffset.x}, () => {
-      //this.props.handleTrackScroll(this.state.scrollOffset, this.props.id);
-    });
-    //this._flatList.scrollToOffset({offset: this.state.width, animated: true});
-  }
+  onLongPress = () =>{
 
-  handleEndScroll = (e) => {
-    this.props.handleTrackScroll(this.state.scrollOffset, this.props.id);
-  }
-
-  updateOffsetX = (x) => {
-    if(this.props.id != this.props.scrollID) {
-      this._flatList.scrollToOffset({offset: x, animated: false});
-    }
-  }
-
-  displayTrack = (item, sep) =>{
-    //alert(sep);
-    return <View style={styles.sampleContainer} onLayout = {this.handlePLayout}>
-      <Text style = {styles.sample, {width:sep}}> {item.sample} </Text>
-      </View>
-  }
-
-  handlePLayout = (e) =>{
-    this.setState({pWidth: e.nativeEvent.layout.width})
+    this.props.removeTrack(this.props.id);
   }
 
   render() {
-    let sep = (this.state.width/(this.state.points+1));
+
+
     return (
       <View style={styles.container} onLayout={this.handleLayout}>
-        <FlatList
-          ref={(ref) => { this._flatList = ref; }}
-          data={this.state.samples}
-          horizontal={true}
-          extraData={this.state}
-          onScroll={this.handleScroll}
-          onMomentumScrollEnd={this.handleEndScroll}
-          renderItem={({item}) => this.displayTrack(item, sep)}
-          keyExtractor={(item, index) => index}
-          pagingEnabled={true}
-        />
+        <TouchableOpacity onLongPress={this.onLongPress}>
+        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} PlaceInlist: {this.props.placeInList} {'\n'} ({this.state.sample})</Text>
+        </TouchableOpacity>
       </View>
     );
   }
