@@ -61,7 +61,7 @@ export default class Track extends Component {
   handleLayout = (event) =>{
     let layout = event.nativeEvent.layout;
     this.setState({height: layout.height, width: layout.width})
-    this.props.onLayout(layout.height,layout.width,10,this.props.id);
+    this.props.onLayout(layout.height,layout.width,10,this.props.placeInList);
   }
 
   onLongPress = () =>{
@@ -75,7 +75,7 @@ export default class Track extends Component {
     return (
       <View style={styles.container} onLayout={this.handleLayout}>
         <TouchableOpacity onLongPress={this.onLongPress}>
-        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} {'\n'} ({this.state.sample})</Text>
+        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} PlaceInlist: {this.props.placeInList} {'\n'} ({this.state.sample})</Text>
         </TouchableOpacity>
       </View>
     );

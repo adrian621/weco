@@ -40,7 +40,12 @@ export default class TrackManager extends Component {
       for(let i=0; i<res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
-        tracks[trackID].sample = sample;
+        //tracks[trackID].sample = sample;
+        for(let i = 0; i < tracks.length; i++){
+          if(tracks[i].trackId == trackID){
+            tracks[i].sample = sample;
+          }
+        }
       }
       this.setState({tracks: tracks});
     });
@@ -58,8 +63,12 @@ export default class TrackManager extends Component {
       let sampleName = res.name;
       let trackID = res.trackID;
 
-      updated_tracks[trackID].sample = sampleName;
-
+      //updated_tracks[trackID].sample = sampleName;
+      for(let i = 0; i < updated_tracks.length; i++){
+        if(updated_tracks[i].trackId == trackID){
+          updated_tracks[i].sample = sampleName;
+        }
+      }
       this.setState({tracks: updated_tracks});
     });
   }
@@ -127,7 +136,8 @@ export default class TrackManager extends Component {
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
-    let trackId = tracks.length;
+    //let trackId = tracks.length; RIKTIGT DÅLIG KOD
+    let trackId = Math.floor(Math.random() * 10000000) + 1 ;
 
     tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
 
@@ -158,29 +168,39 @@ export default class TrackManager extends Component {
 
     let updated_tracks = [...this.state.tracks];
 
-    updated_tracks[trackID].sample = sample;
+    //updated_tracks[trackID].sample = sample;
+    for(let i = 0; i< tracks.length; i++){
+      if(tracks[i].trackId == trackID){
+        tracks[i].sample = sample;
+      }
+    }
 
     this.setState({tracks: updated_tracks});
   }
 
   removeTrack = (id) =>{
-   // console.log('inRemove');
     tracks = this.state.tracks;
 
     for(let i = 0; i < tracks.length; i++){
     if (tracks[i].trackId == id){
-      console.log(tracks.length);
       tracks.splice(i,1);
-      console.log(tracks.length);
       this.setState({tracks:tracks});
     }
     }
   }
 
   displayTrack = (item) =>{
+    tracks = this.state.tracks;
+    for(let i = 0; i < tracks.length; i++){
+    if (item.trackId == tracks[i].trackId){
+      y = this.state.tracks[i].y;
+      placeInList = i;
+    }
+    }
+
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
-            offsetY={this.state.offsetY} y={this.state.tracks[item.trackId].y}
-            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout}
+            offsetY={this.state.offsetY} y={y}
+            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout} placeInList = {placeInList}
             id={item.trackId} sample={item.sample} onChange={this.onChange}
             removeTrack = {this.removeTrack}
             >
