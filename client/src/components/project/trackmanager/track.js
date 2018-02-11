@@ -59,6 +59,7 @@ export default class Track extends Component {
   }
 
   handleLayout = (event) =>{
+    //alert('Layout change invoked for track in list:' + this.props.placeInList)
     let layout = event.nativeEvent.layout;
     this.setState({height: layout.height, width: layout.width})
     this.props.onLayout(layout.height,layout.width,10,this.props.placeInList);

@@ -136,7 +136,7 @@ export default class TrackManager extends Component {
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
-    //let trackId = tracks.length; RIKTIGT DÅLIG KOD
+    //let trackId = tracks.length; 
     let trackId = Math.floor(Math.random() * 10000000) + 1 ;
 
     tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
@@ -146,13 +146,15 @@ export default class TrackManager extends Component {
     });
   }
 
-  handleTrackLayout = (height,width,marginBottom,id) =>{
-    let y = id*(height+marginBottom);
+  handleTrackLayout = (height,width,marginBottom,placeInList) =>{
+    //alert(placeInList);
+    let y = placeInList*(height+marginBottom);
 
     let tracks = this.state.tracks;
-    tracks[id].height=height;
-    tracks[id].width=width;
-    tracks[id].y=id*(height+marginBottom);
+
+    tracks[placeInList].height=height;
+    tracks[placeInList].width=width;
+    tracks[placeInList].y=placeInList*(height+marginBottom);
 
     this.setState({tracks:tracks,trackHeight:height+marginBottom});
 
@@ -180,13 +182,18 @@ export default class TrackManager extends Component {
 
   removeTrack = (id) =>{
     tracks = this.state.tracks;
-
+    
+    
+    //Force the layout method to be called for every track that is not deleted.
+    this.setState({tracks:[]});
+    
     for(let i = 0; i < tracks.length; i++){
     if (tracks[i].trackId == id){
       tracks.splice(i,1);
       this.setState({tracks:tracks});
     }
     }
+
   }
 
   displayTrack = (item) =>{
