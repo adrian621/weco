@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import GridPage from './gridPage';
 
 export default class Track extends Component {
   constructor(props){
@@ -7,13 +8,9 @@ export default class Track extends Component {
     this.state = {
         width: 0,
         height: 0,
-        scrollOffset: 0,
         sample: '',
-        points:3,
-        swidth: 0,
-        pWidth: 0,
-        samples: [{sample: 'a'}, {sample: ''}, {sample: ''}, {sample: 'd'}, {sample: 'e'}, {sample: ''},
-                  {sample: ''}, {sample: 'h'}, {sample: 'i'}, {sample: ''}, {sample: ''}, {sample: 'l'}, ]
+        page: 0,
+        samples: [['','','','']]
     };
 
     this.socket = this.props.socket;
@@ -22,9 +19,7 @@ export default class Track extends Component {
 
   }
   componentWillReceiveProps(nextProps){
-    this.setState({sample: nextProps.sample}, () => {
-      // this.updateOffsetX(nextProps.scrollOffsetX);
-    });
+    this.setState({sample: nextProps.sample, samples: nextProps.samples, page: nextProps.page});
 
     if(nextProps.droppedSample==='undefined'){
       return;
@@ -61,8 +56,11 @@ export default class Track extends Component {
 
     if(sampleX>trackX &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
-        this.updateSampleBox(sample, indSampleBox);
-        this.setState({sample: sampleData[0]}, () => {
+        let new_samples = this.state.samples;
+        let page = this.state.page;
+        let indSampleBox = (sampleX/(trackWidth*(2/9))) | 0;
+        new_samples[page][indSampleBox] = sample;
+        this.setState({sample: sampleData[0], samples: new_samples}, () => {
           this.props.onSampleDrop({trackID: this.props.id, sample: sampleData[0]});
           this.socket.emit('new-sample-track', {projectID: 1, trackID: this.props.id, name: sampleData[0]});
         });
@@ -88,13 +86,21 @@ export default class Track extends Component {
     this.props.removeTrack(this.props.id);
   }
 
+  changePage = (pageNum) => {
+    this.setState({page: pageNum});
+  }
+
   render() {
 
-
+    //<Text style = {{textAlign: 'center'}}>Track #{this.props.id} PlaceInlist: {this.props.placeInList} {'\n'} ({this.state.sample})</Text>
+    // Use this: (?)
+    // https://github.com/glepur/react-native-swipe-gestures
     return (
       <View style={styles.container} onLayout={this.handleLayout}>
-        <TouchableOpacity onLongPress={this.onLongPress}>
-        <Text style = {{textAlign: 'center'}}>Track #{this.props.id} PlaceInlist: {this.props.placeInList} {'\n'} ({this.state.sample})</Text>
+        <TouchableOpacity style={styles.trackCont} onLongPress={this.onLongPress}>
+          <Animated.View style={{flex: 1}}>
+            <GridPage samples={this.state.samples[this.state.page]}> </GridPage>
+          </Animated.View>
         </TouchableOpacity>
       </View>
     );
@@ -107,23 +113,9 @@ const styles = StyleSheet.create({
     borderWidth:1,
     borderColor:'black',
     height: 50,
-    width: '100%',
     marginBottom: 10
   },
-
-  sampleContainer: {
+  trackCont: {
     flex: 1,
-    borderWidth:1,
-    borderColor: 'black',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-
-  sample: {
-    flex: 1,
-    alignSelf: 'center',
-    justifyContent:'center',
-    alignItems:'center'
   }
 });

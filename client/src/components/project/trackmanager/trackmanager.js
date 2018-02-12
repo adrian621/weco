@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, FlatList } from 'react-native';
+import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
@@ -16,6 +17,7 @@ export default class TrackManager extends Component {
     Sound.setCategory('Playback', true); // true = mixWithOthers
 
     this.state = {
+        gestureName: 'none',
         tracks: [],
         sampleDropped:{},
         toPlay: [],
@@ -29,7 +31,8 @@ export default class TrackManager extends Component {
         ntbHeight: 0,
         totalHeight: 0,
         scrolledTrackID: 0,
-    };
+        gridPage: 0,
+      };
 
     this.socket = this.props.socket;
 
@@ -171,8 +174,11 @@ export default class TrackManager extends Component {
     });
   }
 
-  stop = () =>{
-
+  loadCallback = (error,sound) =>{
+    if (error) {
+      Alert.alert('error', error.message);
+      return 0;
+    }
   }
 
   pause = () =>{
@@ -208,7 +214,7 @@ export default class TrackManager extends Component {
     //let trackId = tracks.length;
     let trackId = Math.floor(Math.random() * 1000000000) + 1 ;
 
-    tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
+    tracks.push({key: trackId, trackId: trackId, samples: [['', '', '', ''],['', '', '', '']], sample: '',y:-1,width:-1,height:-1});
 
     this.setState({tracks: tracks}, () => {
       this.socket.emit('new-track', {trackID: trackId, projectID: 1});
@@ -303,8 +309,8 @@ export default class TrackManager extends Component {
     }
 
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
-            offsetY={this.state.offsetY} y={y} droppedSample={this.state.sampleDropped}
-            onLayout={this.handleTrackLayout} placeInList = {placeInList}
+            offsetY={this.state.offsetY} y={y} droppedSample={this.state.sampleDropped} samples={item.samples}
+            onLayout={this.handleTrackLayout} placeInList = {placeInList} page={this.state.gridPage}
             id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}
             removeTrack = {this.removeTrack}>
            </Track>;
@@ -321,6 +327,33 @@ export default class TrackManager extends Component {
     this.setState({tmHeight: e.nativeEvent.layout.height});
   }
 
+  onSwipeLeft = (gestureState) => {
+    let new_page = this.state.gridPage + 1;
+
+    this.setState({gridPage: new_page});
+  }
+
+  onSwipeRight(gestureState) {
+    if(this.state.gridPage < 1) {
+      return
+    }
+
+    let new_page = this.state.gridPage - 1;
+
+    this.setState({gridPage: new_page});
+  }
+
+  onSwipe(gestureName, gestureState) {
+    const {SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
+    this.setState({gestureName: gestureName});
+    switch (gestureName) {
+      case SWIPE_LEFT:
+        break;
+      case SWIPE_RIGHT:
+        break;
+    }
+  }
+
   render() {
     let tListHeight = 0;
     if(this.state.tracks.length!=0){
@@ -331,27 +364,43 @@ export default class TrackManager extends Component {
       }
     }
 
+    const config = {
+      velocityThreshold: 0.3,
+      directionalOffsetThreshold: 80
+    };
+
 
     return (
-      <View style={styles.container}>
-        <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-          <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
-        </View>
-        <TimeLine bars={1}></TimeLine>
-        <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
-          <View style={{height:tListHeight}}>
-            <FlatList
-              data={this.state.tracks}
-              extraData={this.state}
-              onScroll={this.handleScroll}
-              renderItem={({item}) => this.displayTrack(item)}
-              keyExtractor={(item, index) => index}
-            />
-
+      <GestureRecognizer
+        onSwipe={(direction, state) => this.onSwipe(direction, state)}
+        onSwipeLeft={(state) => this.onSwipeLeft(state)}
+        onSwipeRight={(state) => this.onSwipeRight(state)}
+        config={config}
+        style={{
+          flex: 1,
+        }}
+        >
+        <View style={styles.container}>
+          <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
+            <SoundControl onPlay = {this.playSounds} onStop={this.stop} onPause={this.pause}></SoundControl>
           </View>
-          <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
+          <TimeLine bars={1}></TimeLine>
+          <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
+            <View style={{height:tListHeight}}>
+              <FlatList
+                ref={(ref) => { this._flatList = ref; }}
+                data={this.state.tracks}
+                extraData={this.state}
+                onScroll={this.handleScroll}
+                renderItem={({item}) => this.displayTrack(item)}
+                keyExtractor={(item, index) => index}
+              />
+
+            </View>
+            <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
+          </View>
         </View>
-      </View>
+      </GestureRecognizer>
     );
   }
 }
