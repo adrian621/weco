@@ -223,7 +223,7 @@ export default class TrackManager extends Component {
     //let trackId = tracks.length;
     let trackId = Math.floor(Math.random() * 1000000000) + 1 ;
 
-    tracks.push({key: trackId, trackId: trackId, samples: [['a', '', '', ''],['e', '', '', '']], sample: '',y:-1,width:-1,height:-1});
+    tracks.push({key: trackId, trackId: trackId, samples: [['', '', '', ''],['', '', '', '']], sample: '',y:-1,width:-1,height:-1});
 
     this.setState({tracks: tracks}, () => {
       this.socket.emit('new-track', {trackID: trackId, projectID: 1});
