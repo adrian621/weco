@@ -44,7 +44,7 @@ export default class TrackManager extends Component {
       for(let i=0; i<res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
-        //tracks[trackID].sample = sample;
+
         for(let i = 0; i < tracks.length; i++){
           if(tracks[i].trackId == trackID){
             tracks[i].sample = sample;
@@ -81,7 +81,6 @@ export default class TrackManager extends Component {
       let sampleName = res.name;
       let trackID = res.trackID;
 
-      //updated_tracks[trackID].sample = sampleName;
       for(let i = 0; i < updated_tracks.length; i++){
         if(updated_tracks[i].trackId == trackID){
           updated_tracks[i].sample = sampleName;
@@ -133,10 +132,20 @@ export default class TrackManager extends Component {
     let loadedSounds=[];
 
     let context=this;
+    let tracks = this.state.tracks;
+    let sample=0;
 
-    for(let file of this.state.toPlay){
+    for(let id of this.state.toPlay){
+      //Find sample of trackID(will be fixed later)
+      for(let i = 0; i< tracks.length; i++){
+        if(tracks[i].trackId == id){
+          sample = tracks[i].sample;
+          break;
+        }
+      }
+
       let sPromise =  new Promise(function(resolve, reject) {
-        const sound = new Sound(context.state.soundFiles[file], error => context.loadCallback(error, sound,file,resolve,reject));
+        const sound = new Sound(context.state.soundFiles[sample], error => context.loadCallback(error, sound,id,resolve,reject));
 
       });
       loadedSounds.push(sPromise);
@@ -147,9 +156,9 @@ export default class TrackManager extends Component {
     });
   }
 
-  loadCallback = (error,sound,file,resolve,reject) =>{
+  loadCallback = (error,sound,id,resolve,reject) =>{
     let sounds = this.state.sounds;
-    sounds[file]=sound;
+    sounds[id]=sound;
 
     this.setState({sounds:sounds}, ()=>{
       if (error) {
@@ -243,7 +252,6 @@ export default class TrackManager extends Component {
 
     let updated_tracks = [...this.state.tracks];
 
-    //updated_tracks[trackID].sample = sample;
     for(let i = 0; i< tracks.length; i++){
       if(tracks[i].trackId == trackID){
         tracks[i].sample = sample;
@@ -255,17 +263,26 @@ export default class TrackManager extends Component {
 
   releaseSounds = (samples)=>{
     let sounds = this.state.sounds;
+    let id = 0;
     for(let sample of samples){
-      sounds[sample].release();
-      delete sounds[sample];
+      for(let i=0;i<this.state.tracks.length;i++){
+        if(this.state.tracks[i].sample===sample){
+          id=this.state.tracks[i].trackId;
+        }
+      }
+      if(Object.keys(sounds).includes(id)){
+        sounds[id].release();
+        delete sounds[id];
+      }
     }
   }
 
   generateToPlay = () =>{
     let newToPlay = [];
+
     for (let track of this.state.tracks){
       if(track.sample!=''){
-        newToPlay.push(track.sample);
+        newToPlay.push(track.trackId);
       }
     }
 
@@ -282,14 +299,16 @@ export default class TrackManager extends Component {
 
 
     //Force the layout method to be called for every track that is not deleted.
-    this.setState({tracks:[]});
-
-    for(let i = 0; i < tracks.length; i++){
-      if (tracks[i].trackId == id){
-        tracks.splice(i,1);
-        this.setState({tracks:tracks},this.generateToPlay());
+    this.setState({tracks:[]},()=>{
+      for(let i = 0; i < tracks.length; i++){
+        if (tracks[i].trackId == id){
+          tracks.splice(i,1);
+          this.setState({tracks:tracks},()=>{this.generateToPlay()});
+        }
       }
-    }
+    });
+
+
 
   }
 
