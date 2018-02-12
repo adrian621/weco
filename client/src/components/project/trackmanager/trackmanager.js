@@ -163,12 +163,20 @@ export default class TrackManager extends Component {
 
   }
 
-  play = ()=>{
+  play = () =>{
     this.playSounds().then(()=>{
       this.loadSounds();
     }).catch((error)=>{
       console.log("play error", error)
     });
+  }
+
+  stop = () =>{
+
+  }
+
+  pause = () =>{
+
   }
   playSounds = () =>{
     //Play all sounds when they are loaded
@@ -188,7 +196,7 @@ export default class TrackManager extends Component {
       sound.release();
       if(!success){
         //Kör om alla ljud igen här tills de funkar
-        console.log("failed to play: ", sound)
+        alert("failed to play: ", sound)
       }
       //Not releasing. Might be undesirable.
     });
@@ -253,13 +261,6 @@ export default class TrackManager extends Component {
     }
   }
 
-  // releaseAll=()=>{
-  //   let sounds=this.state.sounds;
-  //   for(let key in sounds){
-  //     sounds[key].release();
-  //   }
-  //   this.setState({sounds:{}});
-  // }
   generateToPlay = () =>{
     let newToPlay = [];
     for (let track of this.state.tracks){
@@ -303,12 +304,10 @@ export default class TrackManager extends Component {
     }
 
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
-
-            offsetY={this.state.offsetY} y={y}
-            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout} placeInList = {placeInList}
+            offsetY={this.state.offsetY} y={y} droppedSample={this.state.sampleDropped}
+            onLayout={this.handleTrackLayout} placeInList = {placeInList}
             id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}
-            removeTrack = {this.removeTrack}
-            >
+            removeTrack = {this.removeTrack}>
            </Track>;
   }
 
@@ -337,7 +336,7 @@ export default class TrackManager extends Component {
     return (
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-          <SoundControl onPlay = {this.play} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+          <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
         </View>
         <TimeLine bars={1}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>

@@ -3,59 +3,54 @@ import { StyleSheet, Text, View, Button } from 'react-native';
 
 
 export default class soundControl extends Component {
+  play = () =>{
 
+      //alert("play")
 
+  }
 
-play = () =>{
+  stop = () =>{
+      this.props.onStop();
 
-    //alert("play")
+  }
 
-}
+  pause = () =>{
+      this.props.onPause();
+  }
 
-stop = () =>{
-    alert("stop")
-
-}
-
-pause = () =>{
-    alert("pause")
+  render(){
+      return(
+          <View style ={styles.container}>
+              <View style={{flexDirection:'row'}}>
+                <View style = {{padding: 15}}>
+                  <Button
+                  title= {"Play"}
+                  color = "black"
+                  onPress = {this.props.onPlay}
+                  >
+                  </Button>
+                </View>
+                <View style = {{padding: 15}}>
+                  <Button
+                  title= {"Pause"}
+                  color = "black"
+                  onPress = {this.pause}
+                  >
+                  </Button>
+                </View>
+                <View style = {{padding: 15}}>
+                  <Button
+                  title= {"Stop"}
+                  color = "black"
+                  onPress = {this.stop}
+                  >
+                  </Button>
+                </View>
+              </View>
+          </View>
+      );
 
     }
-
-render(){
-
-    return(
-        <View style ={styles.container}>
-            <View style={{flexDirection:'row'}}>
-              <View style = {{padding: 15}}>
-                <Button
-                title= {"Play"}
-                color = "black"
-                onPress = {this.props.onPlay}
-                >
-                </Button>
-              </View>
-              <View style = {{padding: 15}}>
-                <Button
-                title= {"Pause"}
-                color = "black"
-                onPress = {this.pause}
-                >
-                </Button>
-              </View>
-              <View style = {{padding: 15}}>
-                <Button
-                title= {"Stop"}
-                color = "black"
-                onPress = {this.stop}
-                >
-                </Button>
-              </View>
-            </View>
-        </View>
-    );
-
-}
 
 }
 
