@@ -17,22 +17,23 @@ export default class TrackManager extends Component {
 
     this.state = {
         tracks: [],
-        sampleDropped:[],
+        sampleDropped:{},
         toPlay: [],
-        loadedSamples: [],
-        loadedSamplesMap: [],
+        sounds: [],
+        soundFiles: {},
+        loadedSounds: [],
         scrollOffset: 0,
         offsetY: 0,
         bpm: 96,
         trackHeight: 0,
         ntbHeight: 0,
-        totalHeight: 0
+        totalHeight: 0,
+        scrolledTrackID: 0,
     };
 
     this.socket = this.props.socket;
 
     this.socket.on('on-connect', (res) => {
-      //alert(tracks.length);
       this.setState({tracks: res}, () => {
         this.socket.emit('get-curr-samples', {projectID: "project1"});
       });
@@ -50,7 +51,7 @@ export default class TrackManager extends Component {
           }
         }
       }
-      this.setState({tracks: tracks});
+      this.setState({tracks: tracks},this.generateToPlay());
     });
 
     this.socket.on('get-new-track', (res) => {
@@ -61,17 +62,17 @@ export default class TrackManager extends Component {
     });
 
     this.socket.on('get-del-track', (res)  => {
-      
+
       let updated_tracks = this.state.tracks;
       let trackID = res;
       for(let i = 0; i < updated_tracks.length; i++){
         if(updated_tracks[i].trackId == trackID){
           tracks.splice(i,1);
-          this.setState({tracks:updated_tracks});
+          this.setState({tracks:updated_tracks},this.generateToPlay);
         }
       }
-    
-    
+
+
     });
 
 
@@ -86,7 +87,7 @@ export default class TrackManager extends Component {
           updated_tracks[i].sample = sampleName;
         }
       }
-      this.setState({tracks: updated_tracks});
+      this.setState({tracks: updated_tracks},this.generateToPlay());
     });
   }
 
@@ -101,63 +102,102 @@ export default class TrackManager extends Component {
           }
         }
     }
+    //Load files only if new ones have been added and there exists files
+    if(nextProps.files.length!=0 && JSON.stringify(nextProps.files)!=JSON.stringify(this.props.files)){
+      this.loadSoundFiles(nextProps.files);
+    }
   }
 
-  loadSample = (sample) =>{
-    //If sample already loaded, return
-    let loadedSamplesMap = this.state.loadedSamplesMap;
-    if(sample in loadedSamplesMap){
-      return;
+  loadSoundFiles = (files) =>{
+    //Load sound files here
+    let soundFiles = {};
+    for(let file of files){
+      switch(file){
+        case 'sample1.wav':
+          soundFiles[file]=(require('../../../audio/sample1.wav'));
+          break;
+        case 'sample2.wav':
+          soundFiles[file]=(require('../../../audio/sample2.wav'));
+          break;
+        case 'sample3.wav':
+          soundFiles[file]=(require('../../../audio/sample3.wav'));
+          break;
+        default:
+        break;
+      }
+    }
+    this.setState({soundFiles:soundFiles})
+  }
+
+  loadSounds = ()=>{
+    let loadedSounds=[];
+
+    let context=this;
+
+    for(let file of this.state.toPlay){
+      let sPromise =  new Promise(function(resolve, reject) {
+        const sound = new Sound(context.state.soundFiles[file], error => context.loadCallback(error, sound,file,resolve,reject));
+
+      });
+      loadedSounds.push(sPromise);
     }
 
-    let sampleFile=0;
-    switch(sample){
-      case 'sample1.wav':
-        sampleFile=(require('../../../audio/sample1.wav'));
-        break;
-      case 'sample2.wav':
-        sampleFile=(require('../../../audio/sample2.wav'));
-        break;
-      case 'sample3.wav':
-        sampleFile=(require('../../../audio/sample3.wav'));
-        break;
-      default:
-      break;
-    }
-    let loadedSamples = this.state.loadedSamples;
-
-    let context = this;
-    let sPromise =  new Promise(function(resolve, reject) {
-      const sound = new Sound(sampleFile, error => context.loadCallback(error, sound));
-      resolve(sound);
+    this.setState({loadedSounds:loadedSounds}, ()=>{
+      console.log("loaded",loadedSounds)
     });
+  }
 
-    loadedSamples.push(sPromise);
-    loadedSamplesMap.push(sample);
-    this.setState({loadedSamples:loadedSamples,loadedSamplesMap:loadedSamplesMap}, ()=>{
+  loadCallback = (error,sound,file,resolve,reject) =>{
+    let sounds = this.state.sounds;
+    sounds[file]=sound;
 
+    this.setState({sounds:sounds}, ()=>{
+      if (error) {
+        reject(0)
+        return;
+      }
+      else{
+        resolve(sound)
+      }
+    })
+
+  }
+
+  play = () =>{
+    this.playSounds().then(()=>{
+      this.loadSounds();
+    }).catch((error)=>{
+      console.log("play error", error)
     });
   }
-  
-  loadCallback = (error,sound) =>{
-    if (error) {
-      Alert.alert('error', error.message);
-      return 0;
-    }
+
+  stop = () =>{
+
   }
 
+  pause = () =>{
+
+  }
   playSounds = () =>{
-    let context = this;
     //Play all sounds when they are loaded
-    Promise.all(this.state.loadedSamples).then(function(sounds) {
+    let context = this;
+    return Promise.all(this.state.loadedSounds).then(function(sounds) {
       for(let sound of sounds){
         context.playSound(sound);
       }
-    });
+    }).catch((error)=>{alert("Failed to load play some sound(s)")});
   }
 
   playSound = (sound) =>{
-    sound.play(() => {
+    if(!sound.isLoaded()){
+      alert("not loaded when played")
+    }
+    sound.play((success) => {
+      sound.release();
+      if(!success){
+        //Kör om alla ljud igen här tills de funkar
+        alert("failed to play: ", sound)
+      }
       //Not releasing. Might be undesirable.
     });
   }
@@ -165,7 +205,7 @@ export default class TrackManager extends Component {
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
-    //let trackId = tracks.length; 
+    //let trackId = tracks.length;
     let trackId = Math.floor(Math.random() * 1000000000) + 1 ;
 
     tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
@@ -193,6 +233,10 @@ export default class TrackManager extends Component {
     this.setState({scrollOffset: e.nativeEvent.contentOffset.y})
   }
 
+  handleTrackScroll = (x, id) => {
+    this.setState({scrollOffsetX: x, scrolledTrackID: id});
+  }
+
   handleSampleDrop = (data) => {
     let trackID = data.trackID;
     let sample = data.sample;
@@ -206,55 +250,70 @@ export default class TrackManager extends Component {
       }
     }
 
-    this.setState({tracks: updated_tracks});
-
-    //Load sample
-    this.loadSample(sample);
+    this.setState({tracks: updated_tracks}, this.generateToPlay());
   }
 
+  releaseSounds = (samples)=>{
+    let sounds = this.state.sounds;
+    for(let sample of samples){
+      sounds[sample].release();
+      delete sounds[sample];
+    }
+  }
+
+  generateToPlay = () =>{
+    let newToPlay = [];
+    for (let track of this.state.tracks){
+      if(track.sample!=''){
+        newToPlay.push(track.sample);
+      }
+    }
+
+    //Release sounds that were on track(s) but have now been replaced/removed
+    let deltaToPlay = this.state.toPlay.filter(x => !newToPlay.includes(x));
+    this.releaseSounds(deltaToPlay);
+
+    this.setState({toPlay: newToPlay},()=>this.loadSounds());
+  }
 
   removeTrack = (id) =>{
     tracks = this.state.tracks;
     this.socket.emit('del-track', {trackID: id, projectID: 1});
-    
-    
+
+
     //Force the layout method to be called for every track that is not deleted.
     this.setState({tracks:[]});
-    
+
     for(let i = 0; i < tracks.length; i++){
-    if (tracks[i].trackId == id){
-      tracks.splice(i,1);
-      this.setState({tracks:tracks});
-    }
+      if (tracks[i].trackId == id){
+        tracks.splice(i,1);
+        this.setState({tracks:tracks},this.generateToPlay());
+      }
     }
 
   }
-
 
   displayTrack = (item) =>{
     tracks = this.state.tracks;
     for(let i = 0; i < tracks.length; i++){
-    if (item.trackId == tracks[i].trackId){
-      y = this.state.tracks[i].y;
-      placeInList = i;
-    }
+      if (item.trackId == tracks[i].trackId){
+        y = this.state.tracks[i].y;
+        placeInList = i;
+      }
     }
 
     return <Track socket={this.socket} scrollOffset={this.state.scrollOffset} offsetX={this.props.offsetX}
-
-            offsetY={this.state.offsetY} y={y}
-            droppedSample={this.state.sampleDropped} onLayout={this.handleTrackLayout} placeInList = {placeInList}
+            offsetY={this.state.offsetY} y={y} droppedSample={this.state.sampleDropped}
+            onLayout={this.handleTrackLayout} placeInList = {placeInList}
             id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}
-            removeTrack = {this.removeTrack}
-            >
-
+            removeTrack = {this.removeTrack}>
            </Track>;
   }
 
   handleSCLayout = (e) =>{
-    this.setState({offsetY: e.nativeEvent.layout.height});
+    this.setState({offsetY: e.nativeEvent.layout.height,
+                    offsetX: e.nativeEvent.layout.width});
   }
-
   handleNTBLayout = (height) =>{
     this.setState({ntbHeight: height});
   }
@@ -276,9 +335,9 @@ export default class TrackManager extends Component {
     return (
       <View style={styles.container}>
         <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-          <SoundControl onPlay = {this.playSounds} onStop= {()=>{}} onPause ={()=>{}}></SoundControl>
+          <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
         </View>
-        <TimeLine></TimeLine>
+        <TimeLine bars={1}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
           <View style={{height:tListHeight}}>
             <FlatList

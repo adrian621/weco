@@ -38,15 +38,17 @@ export default class SampleBrowser extends Component {
     RNFS.readdir(RNFS.DocumentDirectoryPath) // On Android, use "RNFS.DocumentDirectoryPath" (MainBundlePath is not defined)
       .then((result) => {
         let files = [];
+        let samples = [] //This list is for sending to project.js->trackmanager
         let j=0;
         result.forEach((value,i)=>{
           if(value!='ReactNativeDevBundle.js'){
             files.push({key: value,index:j});
+            samples.push(value);
             j=j+1;
           }
         })
-
         this.update_files(files);
+        this.props.onFilesLoaded(samples);
 
       })
       .catch((err) => {
@@ -98,6 +100,7 @@ export default class SampleBrowser extends Component {
     return (
       <View style={styles.container}>
         <FlatList
+          style={styles.list}
           data={this.state.files}
           extraData={this.state}
           onScroll={this.handleScroll}
@@ -114,5 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#d9d9d9',
     borderRightWidth:0,
     borderColor: 'black',
+  },
+  list: {
   }
 });
