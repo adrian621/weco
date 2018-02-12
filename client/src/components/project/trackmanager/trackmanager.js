@@ -68,7 +68,7 @@ export default class TrackManager extends Component {
       for(let i = 0; i < updated_tracks.length; i++){
         if(updated_tracks[i].trackId == trackID){
           tracks.splice(i,1);
-          this.setState({tracks:updated_tracks});
+          this.setState({tracks:updated_tracks},this.generateToPlay);
         }
       }
 
@@ -287,7 +287,7 @@ export default class TrackManager extends Component {
     for(let i = 0; i < tracks.length; i++){
       if (tracks[i].trackId == id){
         tracks.splice(i,1);
-        this.setState({tracks:tracks},()=>{this.generateToPlay()});
+        this.setState({tracks:tracks},this.generateToPlay());
       }
     }
 
