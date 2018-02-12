@@ -22,6 +22,10 @@ export default class Track extends Component {
 
   }
   componentWillReceiveProps(nextProps){
+    this.setState({sample: nextProps.sample}, () => {
+      // this.updateOffsetX(nextProps.scrollOffsetX);
+    });
+
     if(nextProps.droppedSample==='undefined'){
       return;
     }

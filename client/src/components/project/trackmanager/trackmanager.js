@@ -285,14 +285,13 @@ export default class TrackManager extends Component {
     this.setState({tracks:[]});
 
     for(let i = 0; i < tracks.length; i++){
-    if (tracks[i].trackId == id){
-      tracks.splice(i,1);
-      this.setState({tracks:tracks});
-    }
+      if (tracks[i].trackId == id){
+        tracks.splice(i,1);
+        this.setState({tracks:tracks},()=>{this.generateToPlay()});
+      }
     }
 
   }
-
 
   displayTrack = (item) =>{
     tracks = this.state.tracks;
