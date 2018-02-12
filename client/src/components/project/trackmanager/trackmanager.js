@@ -296,7 +296,9 @@ export default class TrackManager extends Component {
     let deltaToPlay = this.state.toPlay.filter(x => !newToPlay.includes(x));
     this.releaseSounds(deltaToPlay);
 
-    this.setState({toPlay: newToPlay},()=>this.loadSounds());
+    this.setState({toPlay: newToPlay},()=> {
+      this.loadSounds()
+    });
   }
 
   removeTrack = (id) =>{
@@ -390,20 +392,20 @@ export default class TrackManager extends Component {
 
 
     return (
-      <GestureRecognizer
-        onSwipe={(direction, state) => this.onSwipe(direction, state)}
-        onSwipeLeft={(state) => this.onSwipeLeft(state)}
-        onSwipeRight={(state) => this.onSwipeRight(state)}
-        config={config}
-        style={{
-          flex: 1,
-        }}
-        >
         <View style={styles.container}>
           <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-            <SoundControl onPlay = {this.playSounds} onStop={this.stop} onPause={this.pause}></SoundControl>
+            <SoundControl onPlay = {this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
           </View>
           <TimeLine bars={1}></TimeLine>
+          <GestureRecognizer
+            onSwipe={(direction, state) => this.onSwipe(direction, state)}
+            onSwipeLeft={(state) => this.onSwipeLeft(state)}
+            onSwipeRight={(state) => this.onSwipeRight(state)}
+            config={config}
+            style={{
+              flex: 1,
+            }}
+            >
           <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
             <View style={{height:tListHeight}}>
               <FlatList
@@ -414,12 +416,11 @@ export default class TrackManager extends Component {
                 renderItem={({item}) => this.displayTrack(item)}
                 keyExtractor={(item, index) => index}
               />
-
             </View>
             <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
           </View>
+          </GestureRecognizer>
         </View>
-      </GestureRecognizer>
     );
   }
 }
