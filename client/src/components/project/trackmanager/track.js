@@ -52,15 +52,17 @@ export default class Track extends Component {
     let trackWidth = this.state.width;
     let trackHeight= this.state.height;
 
-    if(sampleX>trackX && sampleX<trackX+trackWidth &&
+    if(sampleX>trackX &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
-        let new_samples = this.state.samples;
-        let page = this.state.page;
-        let indSampleBox = (sampleX/(trackWidth*(2/9))) | 0;
-        new_samples[page][indSampleBox] = sample;
-        this.setState({sample: sampleData[0], samples: new_samples}, () => {
-          this.props.onSampleDrop({trackID: this.props.id, sample: sampleData[0]});
-          this.socket.emit('new-sample-track', {projectID: 1, trackID: this.props.id, name: sampleData[0]});
+        this.setState({sample: sampleData[0]}, () => {
+          let new_samples = this.state.samples;
+          let page = this.state.page;
+          let indSampleBox = (sampleX/(trackWidth*(2/9))) | 0;
+          new_samples[page][indSampleBox] = sample;
+          this.setState({sample: sampleData[0], samples: new_samples}, () => {
+            this.props.onSampleDrop({trackID: this.props.id, sample: sampleData[0]});
+            this.socket.emit('new-sample-track', {projectID: 1, trackID: this.props.id, name: sampleData[0]});
+          });
         });
       }
   }

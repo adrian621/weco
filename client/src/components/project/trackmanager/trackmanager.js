@@ -159,6 +159,10 @@ export default class TrackManager extends Component {
     });
   }
 
+  stop = () => {
+
+  }
+
   loadCallback = (error,sound,id,resolve,reject) =>{
     let sounds = this.state.sounds;
     sounds[id]=sound;
@@ -181,13 +185,6 @@ export default class TrackManager extends Component {
     }).catch((error)=>{
       console.log("play error", error)
     });
-  }
-
-  loadCallback = (error,sound) =>{
-    if (error) {
-      Alert.alert('error', error.message);
-      return 0;
-    }
   }
 
   pause = () =>{
@@ -397,29 +394,29 @@ export default class TrackManager extends Component {
             <SoundControl onPlay = {this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
           </View>
           <TimeLine bars={1}></TimeLine>
-          <GestureRecognizer
-            onSwipe={(direction, state) => this.onSwipe(direction, state)}
-            onSwipeLeft={(state) => this.onSwipeLeft(state)}
-            onSwipeRight={(state) => this.onSwipeRight(state)}
-            config={config}
-            style={{
-              flex: 1,
-            }}
-            >
           <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
-            <View style={{height:tListHeight}}>
-              <FlatList
-                ref={(ref) => { this._flatList = ref; }}
-                data={this.state.tracks}
-                extraData={this.state}
-                onScroll={this.handleScroll}
-                renderItem={({item}) => this.displayTrack(item)}
-                keyExtractor={(item, index) => index}
-              />
-            </View>
+            <GestureRecognizer
+              onSwipe={(direction, state) => this.onSwipe(direction, state)}
+              onSwipeLeft={(state) => this.onSwipeLeft(state)}
+              onSwipeRight={(state) => this.onSwipeRight(state)}
+              config={config}
+              style={{
+                flex: 1,
+              }}
+              >
+                <View style={{height:tListHeight}}>
+                  <FlatList
+                    ref={(ref) => { this._flatList = ref; }}
+                    data={this.state.tracks}
+                    extraData={this.state}
+                    onScroll={this.handleScroll}
+                    renderItem={({item}) => this.displayTrack(item)}
+                    keyExtractor={(item, index) => index}
+                  />
+                </View>
+              </GestureRecognizer>
             <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
           </View>
-          </GestureRecognizer>
         </View>
     );
   }
