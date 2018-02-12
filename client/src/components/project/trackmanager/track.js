@@ -43,7 +43,7 @@ export default class Track extends Component {
 
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
-    let sampleX = sampleData[1]-this.props.offsetX+this.state.scrollOffset;
+    let sampleX = sampleData[1]-this.props.offsetX;
     let sampleY = sampleData[2]-this.props.offsetY;
 
     let trackX=0;
@@ -52,9 +52,7 @@ export default class Track extends Component {
     let trackWidth = this.state.width;
     let trackHeight= this.state.height;
 
-    let indSampleBox = (sampleX/(trackWidth*(2/9))) | 0;
-
-    if(sampleX>trackX &&
+    if(sampleX>trackX && sampleX<trackX+trackWidth &&
       sampleY>trackY && sampleY<trackY+trackHeight+10){ //+10 is equal to marginBottom for Track
         let new_samples = this.state.samples;
         let page = this.state.page;
