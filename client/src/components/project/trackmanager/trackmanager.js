@@ -29,14 +29,19 @@ export default class TrackManager extends Component {
         bpm: 96,
         trackHeight: 0,
         ntbHeight: 0,
+        tmHeight: 0,
         totalHeight: 0,
         scrolledTrackID: 0,
         gridPage: 0,
+        numPages: 2,
       };
 
     this.socket = this.props.socket;
 
     this.socket.on('on-connect', (res) => {
+      for(let track of res) {
+        track.page = this.state.gridPage;
+      }
       this.setState({tracks: res}, () => {
         this.socket.emit('get-curr-samples', {projectID: "project1"});
       });
@@ -47,10 +52,14 @@ export default class TrackManager extends Component {
       for(let i=0; i<res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
+        //let page = 0; //res[i].page soon
+        //let samples = [['', '', '', ''],['', '', '', '']];
 
         for(let i = 0; i < tracks.length; i++){
           if(tracks[i].trackId == trackID){
             tracks[i].sample = sample;
+            //tracks[i].page= page;
+            //tracks[i].samples = samples;
           }
         }
       }
@@ -59,8 +68,9 @@ export default class TrackManager extends Component {
 
     this.socket.on('get-new-track', (res) => {
       let tracks = this.state.tracks;
+      res.page = this.state.gridPage;
 
-      tracks.push({'trackId': res});
+      tracks.push({key: res, trackId: res, page: this.state.gridPage, samples: [['', '', '', ''],['', '', '', '']], sample: '',y:-1,width:-1,height:-1});
       this.setState({tracks: tracks});
     });
 
@@ -83,10 +93,13 @@ export default class TrackManager extends Component {
       let updated_tracks = [...this.state.tracks];
       let sampleName = res.name;
       let trackID = res.trackID;
+      let page = res.page;
+      let ind = res.ind;
 
       for(let i = 0; i < updated_tracks.length; i++){
         if(updated_tracks[i].trackId == trackID){
           updated_tracks[i].sample = sampleName;
+          updated_tracks[i].samples[page][ind] = sampleName;
         }
       }
       this.setState({tracks: updated_tracks},this.generateToPlay());
@@ -220,7 +233,7 @@ export default class TrackManager extends Component {
     //let trackId = tracks.length;
     let trackId = Math.floor(Math.random() * 1000000000) + 1 ;
 
-    tracks.push({key: trackId, trackId: trackId, samples: [['', '', '', ''],['', '', '', '']], sample: '',y:-1,width:-1,height:-1});
+    tracks.push({key: trackId, trackId: trackId, page: this.state.gridPage, samples: [['', '', '', ''],['', '', '', '']], sample: '',y:-1,width:-1,height:-1});
 
     this.setState({tracks: tracks}, () => {
       this.socket.emit('new-track', {trackID: trackId, projectID: 1});
@@ -346,6 +359,9 @@ export default class TrackManager extends Component {
   }
 
   onSwipeLeft = (gestureState) => {
+    if(this.state.gridPage == this.state.numPages-1) {
+      return
+    }
     let new_page = this.state.gridPage + 1;
 
     this.setState({gridPage: new_page});
@@ -394,16 +410,16 @@ export default class TrackManager extends Component {
             <SoundControl onPlay = {this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
           </View>
           <TimeLine bars={1}></TimeLine>
+          <GestureRecognizer
+            onSwipe={(direction, state) => this.onSwipe(direction, state)}
+            onSwipeLeft={(state) => this.onSwipeLeft(state)}
+            onSwipeRight={(state) => this.onSwipeRight(state)}
+            config={config}
+            style={{
+              flex: 1,
+            }}
+            >
           <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
-            <GestureRecognizer
-              onSwipe={(direction, state) => this.onSwipe(direction, state)}
-              onSwipeLeft={(state) => this.onSwipeLeft(state)}
-              onSwipeRight={(state) => this.onSwipeRight(state)}
-              config={config}
-              style={{
-                flex: 1,
-              }}
-              >
                 <View style={{height:tListHeight}}>
                   <FlatList
                     ref={(ref) => { this._flatList = ref; }}
@@ -414,9 +430,9 @@ export default class TrackManager extends Component {
                     keyExtractor={(item, index) => index}
                   />
                 </View>
-              </GestureRecognizer>
             <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
           </View>
+        </GestureRecognizer>
         </View>
     );
   }

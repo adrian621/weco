@@ -61,7 +61,7 @@ export default class Track extends Component {
           new_samples[page][indSampleBox] = sample;
           this.setState({sample: sampleData[0], samples: new_samples}, () => {
             this.props.onSampleDrop({trackID: this.props.id, sample: sampleData[0]});
-            this.socket.emit('new-sample-track', {projectID: 1, trackID: this.props.id, name: sampleData[0]});
+            this.socket.emit('new-sample-track', {projectID: 1, trackID: this.props.id, name: sampleData[0], ind: indSampleBox, page: page});
           });
         });
       }
@@ -116,6 +116,6 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   trackCont: {
-    flex: 1,
+    flex: 1
   }
 });
