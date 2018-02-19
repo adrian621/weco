@@ -4,6 +4,7 @@ import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
 import TimeLine from './timeline';
+import WecoAudio from '../../../nativemodules';
 
 var Sound = require('react-native-sound');
 
@@ -12,6 +13,11 @@ export default class TrackManager extends Component {
 
   constructor(props){
     super(props);
+
+    //WecoAudio test
+    WecoAudio.test((txt)=>{
+      alert(txt);
+    });
 
     Sound.setCategory('Playback', true); // true = mixWithOthers
 
