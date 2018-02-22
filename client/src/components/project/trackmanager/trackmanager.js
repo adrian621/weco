@@ -6,7 +6,6 @@ import SoundControl from './soundControl';
 import TimeLine from './timeline';
 import WecoAudio from '../../../nativemodules';
 
-var Sound = require('react-native-sound');
 
 
 export default class TrackManager extends Component {
@@ -14,15 +13,9 @@ export default class TrackManager extends Component {
   constructor(props){
     super(props);
 
-    Sound.setCategory('Playback', true); // true = mixWithOthers
-
     this.state = {
         tracks: [],
         sampleDropped:{},
-        toPlay: [],
-        sounds: [],
-        soundFiles: {},
-        loadedSounds: [],
         scrollOffset: 0,
         offsetY: 0,
         bpm: 96,
@@ -33,9 +26,10 @@ export default class TrackManager extends Component {
     };
     
     //WecoAudio test
-    WecoAudio.mixSound(()=>{
-      //alert(txt);
-    });
+    
+
+
+
 
     this.socket = this.props.socket;
 
@@ -57,7 +51,7 @@ export default class TrackManager extends Component {
           }
         }
       }
-      this.setState({tracks: tracks},this.generateToPlay());
+      this.setState({tracks: tracks});
     });
 
     this.socket.on('get-new-track', (res) => {
@@ -74,7 +68,7 @@ export default class TrackManager extends Component {
       for(let i = 0; i < updated_tracks.length; i++){
         if(updated_tracks[i].trackId == trackID){
           tracks.splice(i,1);
-          this.setState({tracks:updated_tracks},this.generateToPlay);
+          this.setState({tracks:updated_tracks});
         }
       }
 
@@ -92,7 +86,7 @@ export default class TrackManager extends Component {
           updated_tracks[i].sample = sampleName;
         }
       }
-      this.setState({tracks: updated_tracks},this.generateToPlay());
+      this.setState({tracks: updated_tracks});
     });
   }
 
@@ -109,80 +103,21 @@ export default class TrackManager extends Component {
     }
     //Load files only if new ones have been added and there exists files
     if(nextProps.files.length!=0 && JSON.stringify(nextProps.files)!=JSON.stringify(this.props.files)){
-      this.loadSoundFiles(nextProps.files);
     }
   }
 
-  loadSoundFiles = (files) =>{
-    //Load sound files here
-    let soundFiles = {};
-    for(let file of files){
-      switch(file){
-        case 'sample1.wav':
-          soundFiles[file]=(require('../../../audio/sample1.wav'));
-          break;
-        case 'sample2.wav':
-          soundFiles[file]=(require('../../../audio/sample2.wav'));
-          break;
-        case 'sample3.wav':
-          soundFiles[file]=(require('../../../audio/sample3.wav'));
-          break;
-        default:
-        break;
-      }
-    }
-    this.setState({soundFiles:soundFiles})
-  }
-
-  loadSounds = ()=>{
-    let loadedSounds=[];
-
-    let context=this;
-    let tracks = this.state.tracks;
-    let sample=0;
-
-    for(let id of this.state.toPlay){
-      //Find sample of trackID(will be fixed later)
-      for(let i = 0; i< tracks.length; i++){
-        if(tracks[i].trackId == id){
-          sample = tracks[i].sample;
-          break;
-        }
-      }
-
-      let sPromise =  new Promise(function(resolve, reject) {
-        const sound = new Sound(context.state.soundFiles[sample], error => context.loadCallback(error, sound,id,resolve,reject));
-
-      });
-      loadedSounds.push(sPromise);
-    }
-
-    this.setState({loadedSounds:loadedSounds}, ()=>{
-      console.log("loaded",loadedSounds)
-    });
-  }
-
-  loadCallback = (error,sound,id,resolve,reject) =>{
-    let sounds = this.state.sounds;
-    sounds[id]=sound;
-
-    this.setState({sounds:sounds}, ()=>{
-      if (error) {
-        reject(0)
-        return;
-      }
-      else{
-        resolve(sound)
-      }
-    })
-
-  }
 
   play = () =>{
-    this.playSounds().then(()=>{
-      this.loadSounds();
-    }).catch((error)=>{
-      console.log("play error", error)
+    let samples = [];
+    
+    for (let track of this.state.tracks){
+      if(track.sample != ""){
+      samples.push(track.sample.split('.')[0]);
+      }
+    }    
+
+  WecoAudio.mixSound(samples,()=>{
+      //alert(txt);
     });
   }
 
@@ -193,30 +128,7 @@ export default class TrackManager extends Component {
   pause = () =>{
 
   }
-  playSounds = () =>{
-    //Play all sounds when they are loaded
-    let context = this;
-    return Promise.all(this.state.loadedSounds).then(function(sounds) {
-      for(let sound of sounds){
-        context.playSound(sound);
-      }
-    }).catch((error)=>{alert("Failed to load play some sound(s)")});
-  }
-
-  playSound = (sound) =>{
-    if(!sound.isLoaded()){
-      alert("not loaded when played")
-    }
-    sound.play((success) => {
-      sound.release();
-      if(!success){
-        //Kör om alla ljud igen här tills de funkar
-        alert("failed to play: ", sound)
-      }
-      //Not releasing. Might be undesirable.
-    });
-  }
-
+ 
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
@@ -264,39 +176,7 @@ export default class TrackManager extends Component {
       }
     }
 
-    this.setState({tracks: updated_tracks}, this.generateToPlay());
-  }
-
-  releaseSounds = (samples)=>{
-    let sounds = this.state.sounds;
-    let id = 0;
-    for(let sample of samples){
-      for(let i=0;i<this.state.tracks.length;i++){
-        if(this.state.tracks[i].sample===sample){
-          id=this.state.tracks[i].trackId;
-        }
-      }
-      if(Object.keys(sounds).includes(id)){
-        sounds[id].release();
-        delete sounds[id];
-      }
-    }
-  }
-
-  generateToPlay = () =>{
-    let newToPlay = [];
-
-    for (let track of this.state.tracks){
-      if(track.sample!=''){
-        newToPlay.push(track.trackId);
-      }
-    }
-
-    //Release sounds that were on track(s) but have now been replaced/removed
-    let deltaToPlay = this.state.toPlay.filter(x => !newToPlay.includes(x));
-    this.releaseSounds(deltaToPlay);
-
-    this.setState({toPlay: newToPlay},()=>this.loadSounds());
+    this.setState({tracks: updated_tracks});
   }
 
   removeTrack = (id) =>{
@@ -309,7 +189,7 @@ export default class TrackManager extends Component {
       for(let i = 0; i < tracks.length; i++){
         if (tracks[i].trackId == id){
           tracks.splice(i,1);
-          this.setState({tracks:tracks},()=>{this.generateToPlay()});
+          this.setState({tracks:tracks});
         }
       }
     });

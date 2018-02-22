@@ -6,6 +6,8 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReadableArray;
+import java.util.ArrayList;
 
 import android.media.AudioTrack;
 import android.media.AudioManager;
@@ -14,6 +16,8 @@ import android.media.AudioFormat;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
+
+
 
 public class WecoAudioModule extends ReactContextBaseJavaModule {
     public WecoAudioModule(ReactApplicationContext reactContext) {
@@ -37,70 +41,61 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void mixSound(Callback callback) throws IOException {
+    public void mixSound(ReadableArray tracks, Callback callback) throws IOException {
       AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+      if(tracks.size() == 0){
+          return;
+      }
+      
+      ArrayList<byte[]> r = new ArrayList<byte[]>();
+      int len = 0;
 
-      InputStream in1 =  getReactApplicationContext().getResources().openRawResource(
-            getReactApplicationContext().getResources().getIdentifier("sample1_raw",
-            "raw", getReactApplicationContext().getPackageName()));
-      InputStream in2 =  getReactApplicationContext().getResources().openRawResource(
-            getReactApplicationContext().getResources().getIdentifier("sample2_raw",
-            "raw", getReactApplicationContext().getPackageName()));
-      /*
-      InputStream in1=getReactApplicationContext().getResources().openRawResource(R.raw.track1);
-      InputStream in2=getReactApplicationContext().getResources().openRawResource(R.raw.track2);
-      */
-
-      byte[] music1 = null;
-      music1= new byte[in1.available()];
-      music1=convertStreamToByteArray(in1);
-      in1.close();
-
-
-      byte[] music2 = null;
-      music2= new byte[in2.available()];
-      music2=convertStreamToByteArray(in2);
-      in2.close();
-
-      int len = music1.length;
-      if(music1.length < music2.length) {
-        len = music2.length;
+      for(int i = 0; i < tracks.size(); i++){
+        InputStream in1 =  getReactApplicationContext().getResources().openRawResource(
+        getReactApplicationContext().getResources().getIdentifier(tracks.getString(i),
+        "raw", getReactApplicationContext().getPackageName()));
+            
+        byte[] music1 = null;
+        music1= new byte[in1.available()];
+        music1=convertStreamToByteArray(in1);
+        if(music1.length > len){
+            len = music1.length;
+        } 
+        r.add(music1);
+        in1.close();
       }
 
       byte[] output = new byte[len];
 
       audioTrack.play();
 
-      for(int i=0; i < output.length; i++){
-
-          float samplef1;
-          float samplef2;
-          if(music1.length-1 <= i) {
-            samplef1 = 0;
+      for(int i=0; i < output.length; i++){           
+         
+          float mixed = 0;
+         
+          for(int j= 0; j < r.size(); j++){
+              
+              float sample;
+              
+              if(r.get(j).length-1 >= i){
+                sample = r.get(j)[i] / 128.0f;
+              }
+              else{
+                sample = 0;
+              } 
+              mixed = mixed+sample;
           }
-          else {
-            samplef1 = music1[i] / 128.0f;
-          }
-          if(music2.length-1 <= i) {
-            samplef2 = 0;
-          }
-          else {
-            samplef2 = music2[i] / 128.0f;
-          }
-
-
-          float mixed = samplef1 + samplef2;
           // reduce the volume a bit:
-          mixed *= 0.8;
+          mixed *= 1/tracks.size();
+
           // hard clipping
           if (mixed > 1.0f) mixed = 1.0f;
-
           if (mixed < -1.0f) mixed = -1.0f;
-
+        
           byte outputSample = (byte)(mixed * 128.0f);
           output[i] = outputSample;
-
-      }   //for loop
+      }
+      
       audioTrack.write(output, 0, output.length);
     }
 
