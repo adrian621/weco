@@ -14,11 +14,6 @@ export default class TrackManager extends Component {
   constructor(props){
     super(props);
 
-    //WecoAudio test
-    WecoAudio.test((txt)=>{
-      alert(txt);
-    });
-
     Sound.setCategory('Playback', true); // true = mixWithOthers
 
     this.state = {
@@ -36,6 +31,11 @@ export default class TrackManager extends Component {
         totalHeight: 0,
         scrolledTrackID: 0,
     };
+    
+    //WecoAudio test
+    WecoAudio.mixSound(()=>{
+      //alert(txt);
+    });
 
     this.socket = this.props.socket;
 
