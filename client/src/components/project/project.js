@@ -9,6 +9,8 @@ import TrackManager from './trackmanager/trackmanager';
 import MovingSampleBox from './samplebrowser/movingsamplebox';
 import SocketIOClient from 'socket.io-client';
 
+/* THIS IS A WORKING BUILD OF weco NOT ANYTHING SPECIAL! */
+
 export default class App extends React.Component {
   constructor(){
       super();
