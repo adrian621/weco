@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
+import android.os.AsyncTask;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -20,83 +21,138 @@ import java.io.ByteArrayOutputStream;
 
 
 public class WecoAudioModule extends ReactContextBaseJavaModule {
+    private SoundMixer sMixer;
+
     public WecoAudioModule(ReactApplicationContext reactContext) {
-        super(reactContext);
+      super(reactContext);
+      sMixer = new SoundMixer();
     }
 
     @ReactMethod
     public void test(Callback callback) {
-      callback.invoke("This was sent from WecoAudioModule!");
+      callback.invoke();
     }
 
-    private static byte[] convertStreamToByteArray(InputStream is) throws IOException {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      byte[] buff = new byte[10240];
-      int i;
-      while ((i = is.read(buff, 0, buff.length)) > 0) {
-        baos.write(buff, 0, i);
-      }
 
-      return baos.toByteArray();
+    @ReactMethod
+    public void mixSound(ReadableArray tracks, Callback callback){
+      sMixer = new SoundMixer(tracks);
+
+      AsyncTask.execute(sMixer);
     }
 
     @ReactMethod
-    public void mixSound(ReadableArray tracks, Callback callback) throws IOException {
-      AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
-      if(tracks.size() == 0){
-          return;
-      }
-      
-      ArrayList<byte[]> r = new ArrayList<byte[]>();
-      int len = 0;
+    public void stopSound(){
+      sMixer.stop();
+    }
 
-      for(int i = 0; i < tracks.size(); i++){
-        InputStream in1 =  getReactApplicationContext().getResources().openRawResource(
-        getReactApplicationContext().getResources().getIdentifier(tracks.getString(i),
-        "raw", getReactApplicationContext().getPackageName()));
-            
-        byte[] music1 = null;
-        music1= new byte[in1.available()];
-        music1=convertStreamToByteArray(in1);
-        if(music1.length > len){
-            len = music1.length;
-        } 
-        r.add(music1);
-        in1.close();
+    @ReactMethod
+    public void pauseSound(){
+      sMixer.pause();
+    }
+
+    //Inner class for mixing and playing sounds
+    //Can be used with AsyncTask.execute()
+    private class SoundMixer implements Runnable{
+      private ArrayList<byte[]> r;
+      AudioTrack audioTrack;
+      private int longestSmpLen;
+
+      public SoundMixer(){
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+        r =  new ArrayList<byte[]>();
+        longestSmpLen = 0;
       }
 
-      byte[] output = new byte[len];
+      public SoundMixer(ReadableArray tracks){
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
 
-      audioTrack.play();
+        try{
+          loadBytes(tracks);
+        } catch(IOException e){
+          System.err.println("Caught IOException: " + e.getMessage());
+        }
+      }
 
-      for(int i=0; i < output.length; i++){           
-         
+      public void loadBytes(ReadableArray tracks) throws IOException{
+        r =  new ArrayList<byte[]>();
+
+        longestSmpLen = 0;
+
+        for(int i = 0; i < tracks.size(); i++){
+          InputStream in =  getReactApplicationContext().getResources().openRawResource(
+          getReactApplicationContext().getResources().getIdentifier(tracks.getString(i),
+          "raw", getReactApplicationContext().getPackageName()));
+
+          byte[] music = null;
+          music = new byte[in.available()];
+          music = convertStreamToByteArray(in);
+          if(music.length > longestSmpLen){
+              longestSmpLen = music.length;
+          }
+          r.add(music);
+          in.close();
+        }
+      }
+
+      public void stop(){
+        audioTrack.stop();
+      }
+
+      public void pause(){
+        //This results in the same behavior as stop at the moment.
+        //To be fixed!
+        audioTrack.pause();
+      }
+
+      @Override
+      public void run(){
+        if(r.size() == 0){
+            return;
+        }
+
+        byte[] output = new byte[longestSmpLen];
+
+        audioTrack.play();
+
+        for(int i=0; i < output.length; i++){
           float mixed = 0;
-         
+
           for(int j= 0; j < r.size(); j++){
-              
               float sample;
-              
+
               if(r.get(j).length-1 >= i){
                 sample = r.get(j)[i] / 128.0f;
               }
               else{
                 sample = 0;
-              } 
+              }
               mixed = mixed+sample;
           }
           // reduce the volume a bit:
-          mixed *= 1/tracks.size();
+          mixed *= 1/0.7;
 
           // hard clipping
-          if (mixed > 1.0f) mixed = 1.0f;
-          if (mixed < -1.0f) mixed = -1.0f;
-        
-          byte outputSample = (byte)(mixed * 128.0f);
-          output[i] = outputSample;
+          if (mixed > 1.0f) mixed = 0.9f;
+          if (mixed < -1.0f) mixed = -0.9f;
+
+          output[i] = (byte)(mixed * 128.0f);
+        }
+
+        audioTrack.write(output, 0, output.length);
       }
-      
-      audioTrack.write(output, 0, output.length);
+
+      private byte[] convertStreamToByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buff = new byte[10240];
+        int i;
+        while ((i = is.read(buff, 0, buff.length)) > 0) {
+          baos.write(buff, 0, i);
+        }
+
+        return baos.toByteArray();
+      }
+
     }
 
     @Override

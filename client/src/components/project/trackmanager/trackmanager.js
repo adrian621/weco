@@ -24,9 +24,9 @@ export default class TrackManager extends Component {
         totalHeight: 0,
         scrolledTrackID: 0,
     };
-    
+
     //WecoAudio test
-    
+
 
 
 
@@ -109,26 +109,26 @@ export default class TrackManager extends Component {
 
   play = () =>{
     let samples = [];
-    
+
     for (let track of this.state.tracks){
       if(track.sample != ""){
       samples.push(track.sample.split('.')[0]);
       }
-    }    
+    }
 
-  WecoAudio.mixSound(samples,()=>{
+    WecoAudio.mixSound(samples,()=>{
       //alert(txt);
     });
   }
 
   stop = () =>{
-
+    WecoAudio.stopSound();
   }
 
   pause = () =>{
-
+    WecoAudio.pauseSound();
   }
- 
+
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
