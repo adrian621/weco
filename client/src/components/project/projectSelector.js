@@ -2,9 +2,8 @@ import React from 'react';
 import {StyleSheet,
         Text,
         View,
-        PanResponder,
-        Animated,
         FlatList,
+        Button,
         TouchableHighlight} from 'react-native';
 import SocketIOClient from 'socket.io-client';
 
@@ -43,7 +42,7 @@ export default class App extends React.Component {
             ]}
             renderItem={({item}) => {
                 return(
-                  <TouchableHighlight onPress={() => this.goToNextScreen(item.key)}>
+                  <TouchableHighlight onPress={() => this.props.navigation.navigate('Manager', {id: item.key})}>
                     <View style={styles.itemContainer}>
                        <Text>{item.key}</Text>
                     </View>
@@ -52,6 +51,11 @@ export default class App extends React.Component {
               }
             }
           />
+        </View>
+        <View style={styles.buttonCont}>
+          <Button
+            onPress={() => {}}
+            title="New project" />
         </View>
       </View>
     );
@@ -66,7 +70,7 @@ const styles = StyleSheet.create({
 
   listContainer: {
     width: '80%',
-    height: '75%',
+    height: '65%',
     borderColor: 'black',
     borderWidth: 1,
     alignSelf: 'center',
@@ -93,5 +97,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center'
+  },
+
+  buttonCont: {
+    flex: 1,
+    width: '80%',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+    marginRight: 'auto'
   }
 });
