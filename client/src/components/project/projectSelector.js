@@ -6,16 +6,34 @@ import {StyleSheet,
         Button,
         TouchableHighlight} from 'react-native';
 import SocketIOClient from 'socket.io-client';
-
-/* THIS IS A WORKING BUILD OF weco NOT ANYTHING SPECIAL! */
+import { StackNavigator } from 'react-navigation';
 
 export default class App extends React.Component {
   constructor(){
       super();
 
       this.state = {
-          socket: SocketIOClient('http://10.0.2.2:3000')
+        projects: []
       };
+
+      this.socket = SocketIOClient('http://10.0.2.2:3000');
+
+      this.socket.on('rec-projects', (res) => {
+        alert('bitch')
+        this.setState({projects: res});
+      });
+  }
+
+  createProject = () => {
+    let projects = this.state.projects;
+
+    let projectId = 'Project ' + Math.floor(Math.random() * 1000000000) + 1;
+    projects.push({key: projectId});
+
+    this.setState({projects: projects}, () => {
+      this.socket.emit('create-project', {id: projectId});
+      this.props.navigation.navigate('Manager', {id: projectId});
+    });
   }
 
   goToNextScreen(key){
@@ -23,7 +41,7 @@ export default class App extends React.Component {
   }
 
   render() {
-
+    const { navigate, state } = this.props.navigation;
     return (
       <View style={styles.container}>
         <View style={styles.logo}>
@@ -31,18 +49,11 @@ export default class App extends React.Component {
         </View>
         <View style={styles.listContainer}>
           <FlatList
-            data={[
-              {key: 'Project 1'},
-              {key: 'Project 2'},
-              {key: 'Project 3'},
-              {key: 'Project 4'},
-              {key: 'Project 5'},
-              {key: 'Project 6'},
-              {key: 'Project 7'},
-            ]}
+            data={this.state.projects}
+            extraData={this.state}
             renderItem={({item}) => {
                 return(
-                  <TouchableHighlight onPress={() => this.props.navigation.navigate('Manager', {id: item.key})}>
+                  <TouchableHighlight onPress={(state) => navigate('Manager', {id: item.key})}>
                     <View style={styles.itemContainer}>
                        <Text>{item.key}</Text>
                     </View>
@@ -54,7 +65,7 @@ export default class App extends React.Component {
         </View>
         <View style={styles.buttonCont}>
           <Button
-            onPress={() => {}}
+            onPress={() => this.createProject()}
             title="New project" />
         </View>
       </View>

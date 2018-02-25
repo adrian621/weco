@@ -7,6 +7,7 @@ var jsonParser = require('./jsonParser');
 var db;
 
 var clients = {};
+var namespaces = [];
 /*
   Connect and store an open connection to the mongoDB aswell as running the
   node.js server on 'http://localhost:3000'.
@@ -39,6 +40,31 @@ io.on('connection', function (socket) {
     jsonParser.reconstructRawTracks(tracks, (res) => {
       socket.emit('on-connect', res);
     });
+  });
+
+  dbHandler.getAllProjects(db, (rawProjects) => {
+    jsonParser.reconstructRawProjects(rawProjects, (projects) => {
+      console.log(projects);
+      socket.emit('rec-projects', projects);
+    });
+  });
+  /*
+  socket.on('get-projects', () => {
+    console.log('Client asking for all projects!');
+    dbHandler.getAllProjects(db, (rawProjects) => {
+      jsonParser.reconstructRawProjects(rawProjects, (projects) => {
+        console.log(projects);
+        socket.emit('rec-projects', projects);
+      });
+    });
+  });
+  */
+  socket.on('create-project', (projectInfo) => {
+      //let nsp = io.off('/'+projectInfo.id);
+      //namespaces.push({id: projectInfo.id, nsp: nsp});
+      dbHandler.createProject(db, projectInfo.id, (id) => {
+
+      });
   });
 
   socket.on('get-curr-samples', (projectInfo) => {

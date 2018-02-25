@@ -5,7 +5,7 @@ import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
 import TimeLine from './timeline';
 import WecoAudio from '../../../nativemodules';
-
+import { StackNavigator } from 'react-navigation';
 
 
 export default class TrackManager extends Component {
@@ -23,8 +23,9 @@ export default class TrackManager extends Component {
         ntbHeight: 0,
         totalHeight: 0,
         scrolledTrackID: 0,
+        projectId: 0
     };
-
+    //const { state } = props.navigation;
     //WecoAudio test
 
 
@@ -92,6 +93,7 @@ export default class TrackManager extends Component {
 
   componentWillReceiveProps(nextProps){
     //Handle sampledrop
+    //this.setState({projectId: this.props.navigation.state.id});
     if(nextProps.sampleDroppedAt.length!=0){
         let curr=this.props.sampleDroppedAt;
         let next=nextProps.sampleDroppedAt;

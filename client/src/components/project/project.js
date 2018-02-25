@@ -8,12 +8,13 @@ import SampleBrowser from './samplebrowser/samplebrowser';
 import TrackManager from './trackmanager/trackmanager';
 import MovingSampleBox from './samplebrowser/movingsamplebox';
 import SocketIOClient from 'socket.io-client';
+import { StackNavigator } from 'react-navigation';
 
 /* THIS IS A WORKING BUILD OF weco NOT ANYTHING SPECIAL! */
 
 export default class App extends React.Component {
-  constructor(){
-      super();
+  constructor(props){
+      super(props);
 
       this.state = {
           files: [],
@@ -21,8 +22,11 @@ export default class App extends React.Component {
           movingsample: '',
           sampleDroppedAt: [],
           sampleBrowserWidth: 0,
+          projectId: this.props.navigation.state.params.id,
           socket: SocketIOClient('http://10.0.2.2:3000')
       };
+
+      alert(this.state.projectId);
 
       //this.socket = SocketIOClient('http://10.0.2.2:3000');
   }

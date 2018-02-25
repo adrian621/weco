@@ -122,6 +122,32 @@ function setUpDB(db) {
     });
   }
 
+  function getAllProjects(db, callback) {
+    var dbp = db.db("projects");
+    dbp.listCollections().toArray(function(err, collInfos) {
+      callback(collInfos);
+    });
+  }
+
+  function createProject(db, projectId, callback) {
+    var dbp = db.db("projects");
+    var project = projectId;
+    console.log("Creating new project:    "+project);
+
+    dbp.createCollection(project, function(err, res) {
+      if (err) throw err;
+
+      var proj_info = { name: project, created: "some date"};
+      dbp.collection(project).insertOne(proj_info, function(err, res) {
+        if (err) throw err;
+        console.log(project + " info inserted.");
+        getAllProjects(db, function() {
+
+        });
+      });
+    });
+  }
+
   /*
     Returns an array of all samples that are in the collection of
     'projectId' that satifies the query '{trackID: trackID}' in the
@@ -145,7 +171,7 @@ function setUpDB(db) {
 
     dbs.collection(projectID).find({}).toArray(function(err, res) {
       if (err) throw err;
-      console.log(res);
+      //console.log(res);
       callback(res);
     });
   }
@@ -231,6 +257,6 @@ function setUpDB(db) {
     })
   }
 
-  module.exports = {setUpDB,
+  module.exports = {setUpDB, createProject, getAllProjects,
                     addNewTrack, numOfTracks, tracksFromProjectID,
                     addNewSampleTrack, samplesFromIDs, samplesFromIDs, samplesFromProjectID, removeTrack}
