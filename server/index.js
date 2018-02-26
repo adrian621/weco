@@ -64,16 +64,26 @@ io.on('connection', function (socket) {
   });
 
   socket.on('create-project', (projectInfo) => {
-      let nsp = io.of('/'+projectInfo.id);
-      namespaces.push({id: projectInfo.id, nsp: nsp});
+      socket.broadcast.emit('new-project', projectInfo.id);
+      socket.join(projectInfo.id);
       dbHandler.createProject(db, projectInfo.id, (id) => {
-
       });
+  });
+
+  socket.on('join-project', (projectInfo) => {
+    socket.join(projectInfo.id);
+  });
+
+  socket.on('del-project', (projectInfo) => {
+    console.log('project ' + projectInfo.id + ' was deleted!');
+    dbHandler.removeProject(db, projectInfo.id, (id) => {
+      socket.broadcast.emit('get-del-project', projectInfo.id);
+    });
   });
 
   socket.on('get-curr-samples', (projectInfo) => {
     var projectID = projectInfo.projectID;
-    dbHandler.samplesFromProjectID(db, 1, (samples) => {
+    dbHandler.samplesFromProjectID(db, projectInfo, (samples) => {
       // _id is sent with all tracks, can be removed with a new function
       // in jsonParser.js (not written yet tho')
       socket.emit('on-connect-samples', samples);
@@ -82,7 +92,7 @@ io.on('connection', function (socket) {
 
   socket.on('new-sample-track', (sampleInfo) => {
     dbHandler.addNewSampleTrack(db, sampleInfo, (res) => {
-      socket.broadcast.emit('update-track', res);
+      socket.broadcast.to(sampleInfo.projectID).emit('update-track', res);
     });
   });
 
@@ -92,7 +102,8 @@ io.on('connection', function (socket) {
   */
   socket.on('new-track', (trackInfo) => {
     dbHandler.addNewTrack(db, trackInfo, (id) => {
-      socket.broadcast.emit('get-new-track', id);
+      //console.log(nsp);
+      socket.broadcast.to(trackInfo.projectID).emit('get-new-track', id);
     });
   });
 

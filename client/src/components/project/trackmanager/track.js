@@ -64,7 +64,7 @@ export default class Track extends Component {
         this.updateSampleBox(sample, indSampleBox);
         this.setState({sample: sampleData[0]}, () => {
           this.props.onSampleDrop({trackID: this.props.id, sample: sampleData[0]});
-          this.socket.emit('new-sample-track', {projectID: 1, trackID: this.props.id, name: sampleData[0]});
+          this.socket.emit('new-sample-track', {projectID: this.props.projectId, trackID: this.props.id, name: sampleData[0]});
         });
       }
   }

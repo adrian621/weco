@@ -70,10 +70,7 @@ export default class TrackManager extends Component {
           this.setState({tracks:updated_tracks});
         }
       }
-
-
     });
-
 
     this.socket.on('update-track', (res) => {
       let updated_tracks = [...this.state.tracks];
@@ -138,7 +135,7 @@ export default class TrackManager extends Component {
     tracks.push({key: trackId, trackId: trackId, sample: '',y:-1,width:-1,height:-1});
 
     this.setState({tracks: tracks}, () => {
-      this.socket.emit('new-track', {trackID: trackId, projectID: 1});
+      this.socket.emit('new-track', {trackID: trackId, projectID: this.props.projectId});
     });
   }
 
@@ -181,7 +178,7 @@ export default class TrackManager extends Component {
 
   removeTrack = (id) =>{
     tracks = this.state.tracks;
-    this.socket.emit('del-track', {trackID: id, projectID: 1});
+    this.socket.emit('del-track', {trackID: id, projectID: this.props.projectId});
 
 
     //Force the layout method to be called for every track that is not deleted.
@@ -193,9 +190,6 @@ export default class TrackManager extends Component {
         }
       }
     });
-
-
-
   }
 
   displayTrack = (item) =>{
@@ -211,7 +205,7 @@ export default class TrackManager extends Component {
             offsetY={this.state.offsetY} y={y} droppedSample={this.state.sampleDropped}
             onLayout={this.handleTrackLayout} placeInList = {placeInList}
             id={item.trackId} sample={item.sample} onSampleDrop={this.handleSampleDrop}
-            removeTrack = {this.removeTrack}>
+            removeTrack = {this.removeTrack} projectId={this.props.projectId}>
            </Track>;
   }
 

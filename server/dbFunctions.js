@@ -107,7 +107,7 @@ function setUpDB(db) {
     var trackID = sampleInfo.trackNum.toString();
     var sampleID = "dummyID"; //sampleInfo.sampleID.toString();
     */
-    var projectID = "project" + sampleInfo.projectID.toString();
+    var projectID = sampleInfo.projectID;
     var trackID = sampleInfo.trackID;
     var sample = sampleInfo.name;
 
@@ -148,6 +148,18 @@ function setUpDB(db) {
     });
   }
 
+  function removeProject(db, projectId, callback) {
+    var dbp = db.db("projects");
+    var dbt = db.db("tracks");
+    var dbs = db.db("samples");
+
+    dbp.collection(projectId).drop();
+    dbt.collection(projectId).drop();
+    dbs.collection(projectId).drop();
+    console.log("Project ", projectId, " deleted from MongoDB.");
+    callback(projectId);
+  }
+
   /*
     Returns an array of all samples that are in the collection of
     'projectId' that satifies the query '{trackID: trackID}' in the
@@ -165,11 +177,10 @@ function setUpDB(db) {
     });
   }
 
-  function samplesFromProjectID(db, projectId, callback) {
-    var projectID = "project" + projectId.toString();
+  function samplesFromProjectID(db, projectInfo, callback) {
     var dbs = db.db("samples");
 
-    dbs.collection(projectID).find({}).toArray(function(err, res) {
+    dbs.collection(projectInfo.projectID).find({}).toArray(function(err, res) {
       if (err) throw err;
       //console.log(res);
       callback(res);
@@ -184,7 +195,7 @@ function setUpDB(db) {
     communication between the client, server and database works!
   */
   function addNewTrack(db, trackInfo, callback) {
-    var projectID = "project" + trackInfo.projectID.toString();
+    var projectID = trackInfo.projectID;
     var trackID = trackInfo.trackID.toString();
 
     var dbt = db.db("tracks");
@@ -204,17 +215,23 @@ function setUpDB(db) {
     VERY ALPHA! Has not yet been tested so use carefully.
   */
   function removeTrack(db, trackInfo, callback) {
-    var projectID = "project" + trackInfo.projectID.toString();
+    var projectID = trackInfo.projectID;
     var trackID = trackInfo.trackID.toString();
     var query = {trackNum: trackID};
+    var sampleQuery = {trackID: trackInfo.trackID}
 
     var dbt = db.db("tracks");
+    var dbs = db.db("samples");
 
     dbt.collection(projectID).deleteOne(query, function(err, res) {
       if (err) throw err;
       console.log("Track num ", trackID);
+    });
+
+    dbs.collection(projectID).deleteMany(sampleQuery, function(err, res) {
+      if (err) throw err;
       callback(trackID);
-    })
+    });
   }
 
   /*
@@ -257,6 +274,6 @@ function setUpDB(db) {
     })
   }
 
-  module.exports = {setUpDB, createProject, getAllProjects,
+  module.exports = {setUpDB, createProject, getAllProjects, removeProject,
                     addNewTrack, numOfTracks, tracksFromProjectID,
                     addNewSampleTrack, samplesFromIDs, samplesFromIDs, samplesFromProjectID, removeTrack}

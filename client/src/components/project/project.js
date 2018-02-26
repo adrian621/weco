@@ -23,13 +23,10 @@ export default class App extends React.Component {
           movingsample: '',
           sampleDroppedAt: [],
           sampleBrowserWidth: 0,
-          projectId: this.props.navigation.state.params.id,
-          socket: SocketIOClient('http://10.0.2.2:3000')
+          projectId: this.props.navigation.state.params.id
       };
 
-      alert(this.state.projectId);
-
-      //this.socket = SocketIOClient('http://10.0.2.2:3000');
+      this.socket = this.props.navigation.state.params.socket;
   }
   componentWillMount(){
     // Add a listener for the delta value change
@@ -109,7 +106,7 @@ export default class App extends React.Component {
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
-            <TrackManager socket={this.state.socket} offsetX={this.state.sampleBrowserWidth}
+            <TrackManager socket={this.socket} offsetX={this.state.sampleBrowserWidth}
               files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}
               projectId={this.state.projectId}></TrackManager>
         </View>

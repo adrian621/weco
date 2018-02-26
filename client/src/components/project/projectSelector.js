@@ -8,7 +8,7 @@ import {StyleSheet,
 import SocketIOClient from 'socket.io-client';
 import { StackNavigator } from 'react-navigation';
 
-export default class App extends React.Component {
+export default class ProjectSelector extends React.Component {
   constructor(){
       super();
 
@@ -21,6 +21,17 @@ export default class App extends React.Component {
       this.socket.on('rec-projects', (res) => {
         this.setState({projects: res});
       });
+
+      this.socket.on('new-project', (res) => {
+        let projects = this.state.projects;
+
+        projects.push({key: res});
+        this.setState({projects: projects});
+      });
+
+      this.socket.on('get-del-project', (res) => {
+        this.deleteProject(res);
+      })
   }
 
   createProject = () => {
@@ -31,12 +42,32 @@ export default class App extends React.Component {
 
     this.setState({projects: projects}, () => {
       this.socket.emit('create-project', {id: projectId});
-      this.props.navigation.navigate('Manager', {id: projectId});
+      this.props.navigation.navigate('Manager', {id: projectId, socket: this.socket});
     });
   }
 
-  goToNextScreen(key){
-    alert(key);
+  joinProject = (key) => {
+    this.socket.emit('join-project', {id: key});
+    this.props.navigation.navigate('Manager', {id: key, socket: this.socket});
+  }
+
+  deleteProject = (key) => {
+    let projects = this.state.projects;
+
+    this.setState({projects:[]},()=>{
+      for(let i = 0; i < projects.length; i++){
+        if (projects[i].key == key){
+          projects.splice(i,1);
+          this.setState({projects:projects});
+        }
+      }
+    });
+  }
+
+  onLongPress = (key) => {
+    this.deleteProject(key);
+
+    this.socket.emit('del-project', {id: key});
   }
 
   render() {
@@ -52,7 +83,7 @@ export default class App extends React.Component {
             extraData={this.state}
             renderItem={({item}) => {
                 return(
-                  <TouchableHighlight onPress={(state) => navigate('Manager', {id: item.key})}>
+                  <TouchableHighlight onLongPress={() => this.onLongPress(item.key)} onPress={() => this.joinProject(item.key)}>
                     <View style={styles.itemContainer}>
                        <Text>{item.key}</Text>
                     </View>
