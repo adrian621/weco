@@ -16,6 +16,7 @@ export default class App extends React.Component {
   constructor(props){
       super(props);
 
+      let socketConfig = { path: '/socket' };
       this.state = {
           files: [],
           pan: new Animated.ValueXY(),
@@ -109,7 +110,8 @@ export default class App extends React.Component {
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
             <TrackManager socket={this.state.socket} offsetX={this.state.sampleBrowserWidth}
-              files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
+              files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}
+              projectId={this.state.projectId}></TrackManager>
         </View>
         {this.display_movingsample()}
       </View>

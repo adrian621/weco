@@ -19,7 +19,6 @@ export default class App extends React.Component {
       this.socket = SocketIOClient('http://10.0.2.2:3000');
 
       this.socket.on('rec-projects', (res) => {
-        alert('bitch')
         this.setState({projects: res});
       });
   }

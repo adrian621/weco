@@ -10,7 +10,9 @@
     "react": "16.2.0",
     "react-native": "0.52.1",
     "react-native-fs": "^2.9.7",
+    "react-native-socketio": "^0.3.0",
     "react-native-sound": "0.10.4",
+    "react-native-swift-socketio": "0.0.6",
     "react-navigation": "^1.1.2",
     "socket.io-client": "^2.0.4"
   },

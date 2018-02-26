@@ -31,20 +31,10 @@ mongoUtil.connectToServer(function(err) {
 */
 io.on('connection', function (socket) {
   console.log('User connected!');
-  /*
-    Send all tracks to a newly connected client.
-
-    CHANGE WHAT 'ProjectX' IS CALLED WHEN ROOMS ARE ADDED
-  */
-  dbHandler.tracksFromProjectID(db, "project1", (tracks) => {
-    jsonParser.reconstructRawTracks(tracks, (res) => {
-      socket.emit('on-connect', res);
-    });
-  });
 
   dbHandler.getAllProjects(db, (rawProjects) => {
     jsonParser.reconstructRawProjects(rawProjects, (projects) => {
-      console.log(projects);
+      //console.log(projects);
       socket.emit('rec-projects', projects);
     });
   });
@@ -59,9 +49,23 @@ io.on('connection', function (socket) {
     });
   });
   */
+
+  /*
+    Send all tracks to a newly connected client.
+
+    CHANGE WHAT 'ProjectX' IS CALLED WHEN ROOMS ARE ADDED
+  */
+  socket.on('get-project', (projectInfo) => {
+    dbHandler.tracksFromProjectID(db, projectInfo.id, (tracks) => {
+      jsonParser.reconstructRawTracks(tracks, (res) => {
+        socket.emit('on-connect', res);
+      });
+    });
+  });
+
   socket.on('create-project', (projectInfo) => {
-      //let nsp = io.off('/'+projectInfo.id);
-      //namespaces.push({id: projectInfo.id, nsp: nsp});
+      let nsp = io.of('/'+projectInfo.id);
+      namespaces.push({id: projectInfo.id, nsp: nsp});
       dbHandler.createProject(db, projectInfo.id, (id) => {
 
       });

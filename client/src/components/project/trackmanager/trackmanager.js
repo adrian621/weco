@@ -22,21 +22,19 @@ export default class TrackManager extends Component {
         trackHeight: 0,
         ntbHeight: 0,
         totalHeight: 0,
-        scrolledTrackID: 0,
-        projectId: 0
+        scrolledTrackID: 0
     };
     //const { state } = props.navigation;
     //WecoAudio test
 
 
-
-
-
     this.socket = this.props.socket;
+
+    this.socket.emit('get-project', {id: this.props.projectId});
 
     this.socket.on('on-connect', (res) => {
       this.setState({tracks: res}, () => {
-        this.socket.emit('get-curr-samples', {projectID: "project1"});
+        this.socket.emit('get-curr-samples', {projectID: this.props.projectId});
       });
     });
 
