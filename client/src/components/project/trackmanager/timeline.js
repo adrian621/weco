@@ -47,12 +47,9 @@ export default class TimeLine extends Component {
     let start = Date.now();
     let prevTime = this.state.time;
 
-    //4 beats divided by bpm to ms.
-    let max = (4/this.props.bpm)*60*1000;
-
     let timer = setInterval(()=>{
       this.setState({time: prevTime+(Date.now()-start)},()=>{
-        if(this.state.stopped || this.state.time>=max){
+        if(this.state.stopped || this.state.time>=this.state.maxValue){
           clearInterval(timer);
           this.setState({time: 0})
           this.props.playDone();
@@ -61,9 +58,6 @@ export default class TimeLine extends Component {
           clearInterval(timer);
         }
       });
-
-
-
     }, 1);
   }
 
