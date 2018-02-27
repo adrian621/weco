@@ -12,12 +12,16 @@ export default class TimeLine extends Component {
       stopped: false,
       paused: false,
       sliderBusy: false,
-      maxValue: 0
+      maxValue: 0,
+      pointsMeasured: false
     };
   }
 
   componentWillReceiveProps(nextProps){
-
+    //Scope of trackmanager changed
+    if(nextProps.bars != this.props.bars){
+      this.setState({pointsMeasured: false})
+    }
     //nextProps.bpm != this.props.bpm when functionality for changing bpm exists
     if(nextProps.bpm){
       this.setMaxValue(nextProps.bpm);
@@ -38,7 +42,9 @@ export default class TimeLine extends Component {
   }
 
   handlePLayout = (e) =>{
-    this.setState({pWidth: e.nativeEvent.layout.width})
+    if(!this.state.pointsMeasured){
+      this.setState({pWidth: e.nativeEvent.layout.width, pointsMeasured: true})
+    }
   }
 
   playTimeLine = () =>{
@@ -62,7 +68,7 @@ export default class TimeLine extends Component {
   }
 
   stopTimeLine = () =>{
-    this.setState({stopped: true})
+    this.setState({stopped: true, time: 0})
   }
 
   pauseTimeLine = () =>{
@@ -70,23 +76,30 @@ export default class TimeLine extends Component {
   }
 
   setMaxValue = (bpm) =>{
-    this.setState({maxValue: (4/bpm)*60*1000})
+    this.setState({maxValue: (4*this.props.bars/bpm)*60*1000})
   }
 
-  render(){
+  displayPoints = ()=>{
+
     let points = [];
     let nPoints = this.props.bars*3;
-    let sliderWidth = this.props.bars*1000;
-
     let pointSeparation = (this.state.width-(this.state.pWidth*nPoints))/(nPoints+1);
+
     for(let i =0; i<nPoints; i++){
       points.push(<View key={i} onLayout={this.handlePLayout} style={[styles.point,{marginLeft: pointSeparation}]}></View>);
     }
 
+
+    return points;
+  }
+
+  render(){
+    let sliderWidth = this.props.bars*1000;
+
     return(
       <View onLayout={this.handleLayout} style={styles.line}>
         <Slider maximumValue={this.state.maxValue}  value={this.state.time} removeClippedSubviews={true} style={styles.slider}></Slider>
-        {points}
+        {this.displayPoints()}
       </View>
     );
 
