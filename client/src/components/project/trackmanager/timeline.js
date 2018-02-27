@@ -7,19 +7,78 @@ export default class TimeLine extends Component {
     super();
     this.state = {
       width: 0,
-      pWidth: 0
+      pWidth: 0,
+      time: 0,
+      stopped: false,
+      paused: false,
+      sliderBusy: false,
+      maxValue: 0
     };
+  }
+
+  componentWillReceiveProps(nextProps){
+
+    //nextProps.bpm != this.props.bpm when functionality for changing bpm exists
+    if(nextProps.bpm){
+      this.setMaxValue(nextProps.bpm);
+    }
+    if(nextProps.playing && !this.props.playing){
+      this.playTimeLine();
+    }
+    if(nextProps.stopped && !this.props.stopped){
+      this.stopTimeLine();
+    }
+    if(nextProps.paused && !this.props.paused){
+      this.pauseTimeLine();
+    }
   }
 
   handleLayout = (e) =>{
     this.setState({width: e.nativeEvent.layout.width})
   }
+
   handlePLayout = (e) =>{
     this.setState({pWidth: e.nativeEvent.layout.width})
   }
-  displayPoints(){
 
+  playTimeLine = () =>{
+    this.setState({stopped: false, paused: false});
+
+    let start = Date.now();
+    let prevTime = this.state.time;
+
+    //4 beats divided by bpm to ms.
+    let max = (4/this.props.bpm)*60*1000;
+
+    let timer = setInterval(()=>{
+      this.setState({time: prevTime+(Date.now()-start)},()=>{
+        if(this.state.stopped || this.state.time>=max){
+          clearInterval(timer);
+          this.setState({time: 0})
+          this.props.playDone();
+        }
+        if(this.state.paused){
+          clearInterval(timer);
+        }
+      });
+
+
+
+    }, 1);
   }
+
+  stopTimeLine = () =>{
+    this.setState({stopped: true})
+  }
+
+  pauseTimeLine = () =>{
+    this.setState({paused: true})
+  }
+
+  setMaxValue = (bpm) =>{
+    this.setState({maxValue: (4/bpm)*60*1000})
+  }
+
   render(){
     let points = [];
     let nPoints = this.props.bars*3;
@@ -32,7 +91,7 @@ export default class TimeLine extends Component {
 
     return(
       <View onLayout={this.handleLayout} style={styles.line}>
-        <Slider removeClippedSubviews={true} style={styles.slider}></Slider>
+        <Slider maximumValue={this.state.maxValue}  value={this.state.time} removeClippedSubviews={true} style={styles.slider}></Slider>
         {points}
       </View>
     );

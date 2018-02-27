@@ -130,7 +130,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
               mixed = mixed+sample;
           }
           // reduce the volume a bit:
-          mixed *= 1/0.7;
+          mixed *= 0.7;
 
           // hard clipping
           if (mixed > 1.0f) mixed = 0.9f;
