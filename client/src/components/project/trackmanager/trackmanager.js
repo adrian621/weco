@@ -116,8 +116,8 @@ export default class TrackManager extends Component {
       }
     }
 
-    WecoAudio.mixSound(samples,()=>{
-      //alert(txt);
+    WecoAudio.mixSound(samples,(s)=>{
+      console.log(s);
     });
   }
 
