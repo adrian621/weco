@@ -218,7 +218,7 @@ function setUpDB(db) {
   */
   function removeTrack(db, trackInfo, callback) {
     var projectID = trackInfo.projectID;
-    var trackID = trackInfo.trackID.toString();
+    var trackID = trackInfo.trackID;
     var query = {trackNum: trackID};
     var sampleQuery = {trackID: trackInfo.trackID}
 

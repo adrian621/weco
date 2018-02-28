@@ -49,12 +49,14 @@ export default class TrackManager extends Component {
       for(let i=0; i<res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
-        //let page = 0; //res[i].page soon
-        //let samples = [['', '', '', ''],['', '', '', '']];
+        let page = res[i].page;
+        let ind = res[i].ind;
 
         for(let i = 0; i < tracks.length; i++){
           if(tracks[i].trackId == trackID){
             tracks[i].sample = sample;
+            //updated_tracks[i].samples[page][ind] = sampleName;
+            tracks[i].samples[page][ind] = sample;
             //tracks[i].page= page;
             //tracks[i].samples = samples;
           }
@@ -132,6 +134,11 @@ export default class TrackManager extends Component {
     WecoAudio.mixSound(samples,(s)=>{
       console.log(s);
     });
+  }
+
+  stop = () =>{
+    this.setState({playing: false, stopped: true});
+    WecoAudio.stopSound();
   }
 
   pause = () =>{
