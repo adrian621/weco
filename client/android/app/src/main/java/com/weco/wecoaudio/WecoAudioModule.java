@@ -36,7 +36,12 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void makeMixer(ReadableArray tracks, Callback callback){
       sMixer = new SoundMixer(tracks, callback);
-      sMixer.mix();
+      sMixer.mix(tracks);
+    }
+
+    @ReactMethod
+    public void mix(ReadableArray tracks){
+      sMixer.mix(tracks);
     }
 
     @ReactMethod
@@ -57,7 +62,6 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       private int progress;
       private Callback callback;
       private byte[] output;
-      private boolean paused;
       private ArrayList<byte[]> allByteArrays;
 
       public SoundMixer(){
@@ -67,7 +71,6 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         allByteArrays =  new ArrayList<byte[]>();
         longestSmpLen = 0;
         progress = 0;
-        paused=false;
       }
 
       public SoundMixer(ReadableArray tracks, Callback callback){
@@ -124,11 +127,16 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         audioTrack.pause();
       }
 
-      public void mix(){
+      public void mix(ReadableArray tracks){
+        try{
+          sMixer.loadBytes(tracks);
+        } catch(IOException e){
+          System.err.println("Caught IOException: " + e.getMessage());
+        }
+
         if(allByteArrays.size() == 0){
             return;
         }
-
 
         for(int i=0; i < output.length; i++){
           float mixed = 0.0f;

@@ -113,9 +113,7 @@ export default class TrackManager extends Component {
         samples.push(track.sample.split('.')[0]);
       }
     }
-    WecoAudio.makeMixer(samples, (n)=>{
-      alert(n)
-    });
+    WecoAudio.mix(samples);
   }
 
   play = () =>{
