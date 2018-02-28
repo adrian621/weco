@@ -13,4 +13,12 @@ function reconstructRawTracks(rawTracks, callback) {
   callback(recTracks);
 }
 
-module.exports = {reconstructRawTracks}
+function reconstructRawProjects(rawProjects, callback) {
+  var recProjects = new Array(rawProjects.length);
+  for(var i=0; i<rawProjects.length; i++) {
+    recProjects[i] = {key: rawProjects[i].name};
+  }
+  callback(recProjects);
+}
+
+module.exports = {reconstructRawTracks, reconstructRawProjects}
