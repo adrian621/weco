@@ -19,14 +19,12 @@ export default class TrackManager extends Component {
         scrollOffset: 0,
         offsetY: 0,
         bpm: 96,
+        playing: false,
         trackHeight: 0,
         ntbHeight: 0,
         totalHeight: 0,
         scrolledTrackID: 0
     };
-    //const { state } = props.navigation;
-    //WecoAudio test
-
 
     this.socket = this.props.socket;
 
@@ -105,6 +103,8 @@ export default class TrackManager extends Component {
 
 
   play = () =>{
+    this.setState({playing: true, stopped: false, paused: false});
+
     let samples = [];
 
     for (let track of this.state.tracks){
@@ -119,10 +119,12 @@ export default class TrackManager extends Component {
   }
 
   stop = () =>{
+    this.setState({playing: false, stopped: true});
     WecoAudio.stopSound();
   }
 
   pause = () =>{
+    this.setState({playing: false, paused: true});
     WecoAudio.pauseSound();
   }
 
@@ -220,6 +222,10 @@ export default class TrackManager extends Component {
     this.setState({tmHeight: e.nativeEvent.layout.height});
   }
 
+  handlePlayDone = () =>{
+    this.stop();
+  }
+
   render() {
     let tListHeight = 0;
     if(this.state.tracks.length!=0){
@@ -233,10 +239,11 @@ export default class TrackManager extends Component {
 
     return (
       <View style={styles.container}>
-        <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
+        <View style={styles.SoundControlContainer} onLayout={this.handleSCLayout}>
           <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
         </View>
-        <TimeLine bars={1}></TimeLine>
+        <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
+           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={2}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
           <View style={{height:tListHeight}}>
             <FlatList
