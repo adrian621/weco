@@ -36,7 +36,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void mixSound(ReadableArray tracks, Callback callback){
-      sMixer = new SoundMixer(tracks);
+      sMixer = new SoundMixer(tracks, callback);
 
       AsyncTask.execute(sMixer);
     }
@@ -54,19 +54,20 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     //Inner class for mixing and playing sounds
     //Can be used with AsyncTask.execute()
     private class SoundMixer implements Runnable{
-      private ArrayList<byte[]> r;
+      private ArrayList<byte[]> allByteArrays;
       AudioTrack audioTrack;
       private int longestSmpLen;
+      Callback callback;
 
       public SoundMixer(){
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
-        r =  new ArrayList<byte[]>();
+        allByteArrays =  new ArrayList<byte[]>();
         longestSmpLen = 0;
       }
 
-      public SoundMixer(ReadableArray tracks){
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
-
+      public SoundMixer(ReadableArray tracks, Callback callback){
+        this.audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+        this.callback = callback;
         try{
           loadBytes(tracks);
         } catch(IOException e){
@@ -75,7 +76,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
 
       public void loadBytes(ReadableArray tracks) throws IOException{
-        r =  new ArrayList<byte[]>();
+        allByteArrays =  new ArrayList<byte[]>();
 
         longestSmpLen = 0;
 
@@ -90,7 +91,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
           if(music.length > longestSmpLen){
               longestSmpLen = music.length;
           }
-          r.add(music);
+          this.allByteArrays.add(music);
           in.close();
         }
       }
@@ -107,7 +108,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
       @Override
       public void run(){
-        if(r.size() == 0){
+        if(this.allByteArrays.size() == 0){
             return;
         }
 
@@ -116,27 +117,25 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         audioTrack.play();
 
         for(int i=0; i < output.length; i++){
-          float mixed = 0;
+          float mixed = 0.0f;
 
-          for(int j= 0; j < r.size(); j++){
+          for(int j= 0; j < this.allByteArrays.size(); j++){
               float sample;
 
-              if(r.get(j).length-1 >= i){
-                sample = r.get(j)[i] / 128.0f;
+              if(this.allByteArrays.get(j).length-1 >= i){
+                sample = this.allByteArrays.get(j)[i] / 128.0f;
               }
               else{
-                sample = 0;
+                sample = 0.0f;
               }
-              mixed = mixed+sample;
+
+              mixed = mixed + sample  - (mixed*sample);
           }
-          // reduce the volume a bit:
-          mixed *= 0.7;
-
-          // hard clipping
-          if (mixed > 1.0f) mixed = 0.9f;
-          if (mixed < -1.0f) mixed = -0.9f;
-
-          output[i] = (byte)(mixed * 128.0f);
+        
+          if (mixed > 1.0f) mixed = 1.0f;
+          if (mixed < -1.0f) mixed = -1.0f;
+          
+          output[i] = (byte)((mixed) * 128.0f);
         }
 
         audioTrack.write(output, 0, output.length);
