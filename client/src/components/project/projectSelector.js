@@ -35,15 +35,15 @@ export default class ProjectSelector extends React.Component {
   }
 
   createProject = () => {
-    let projects = this.state.projects;
+    //let projects = this.state.projects;
 
     let projectId = 'Project ' + Math.floor(Math.random() * 1000000000) + 1;
-    projects.push({key: projectId});
+    //projects.push({key: projectId});
 
-    this.setState({projects: projects}, () => {
+    //this.setState({projects: projects}, () => {
       this.socket.emit('create-project', {id: projectId});
       this.props.navigation.navigate('Manager', {id: projectId, socket: this.socket});
-    });
+    //});
   }
 
   joinProject = (key) => {

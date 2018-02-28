@@ -196,7 +196,7 @@ function setUpDB(db) {
   */
   function addNewTrack(db, trackInfo, callback) {
     var projectID = trackInfo.projectID;
-    var trackID = trackInfo.trackID.toString();
+    var trackID = trackInfo.trackID;
 
     var dbt = db.db("tracks");
 
