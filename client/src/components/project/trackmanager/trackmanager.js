@@ -205,9 +205,6 @@ export default class TrackManager extends Component {
         }
       }
     });
-
-
-
   }
 
   displayTrack = (item) =>{

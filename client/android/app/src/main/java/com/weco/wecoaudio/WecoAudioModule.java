@@ -75,6 +75,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
         progress = 0;
+
         this.callback = callback;
         try{
           loadBytes(tracks);
@@ -130,7 +131,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
 
         for(int i=0; i < output.length; i++){
-          float mixed = 0;
+          float mixed = 0.0f;
 
           for(byte[] byArr : allByteArrays){
               float sample;
@@ -139,18 +140,16 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
                 sample = byArr[i] / 128.0f;
               }
               else{
-                sample = 0;
+                sample = 0.0f;
               }
-              mixed = mixed+sample;
+              mixed = mixed + sample  - (mixed*sample);
+
           }
-          // reduce the volume a bit:
-          mixed *= 0.7;
 
-          // hard clipping
-          if (mixed > 1.0f) mixed = 0.9f;
-          if (mixed < -1.0f) mixed = -0.9f;
+          if (mixed > 1.0f) mixed = 1.0f;
+          if (mixed < -1.0f) mixed = -1.0f;
 
-          output[i] = (byte)(mixed * 128.0f);
+          output[i] = (byte)((mixed) * 128.0f);
         }
       }
       @Override
