@@ -29,16 +29,14 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void test(Callback callback) {
-      callback.invoke();
+    public void playSound(){
+      AsyncTask.execute(sMixer);
     }
 
-
     @ReactMethod
-    public void mixSound(ReadableArray tracks, Callback callback){
-      sMixer = new SoundMixer(tracks);
-
-      AsyncTask.execute(sMixer);
+    public void makeMixer(ReadableArray tracks, Callback callback){
+      sMixer = new SoundMixer(tracks, callback);
+      sMixer.mix();
     }
 
     @ReactMethod
@@ -54,19 +52,30 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     //Inner class for mixing and playing sounds
     //Can be used with AsyncTask.execute()
     private class SoundMixer implements Runnable{
-      private ArrayList<byte[]> r;
       AudioTrack audioTrack;
       private int longestSmpLen;
+      private int progress;
+      private Callback callback;
+      private byte[] output;
+      private boolean paused;
+      private ArrayList<byte[]> allByteArrays;
 
       public SoundMixer(){
+        if(audioTrack!=null) audioTrack.release();
+
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
-        r =  new ArrayList<byte[]>();
+        allByteArrays =  new ArrayList<byte[]>();
         longestSmpLen = 0;
+        progress = 0;
+        paused=false;
       }
 
-      public SoundMixer(ReadableArray tracks){
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+      public SoundMixer(ReadableArray tracks, Callback callback){
+        if(audioTrack!=null) audioTrack.release();
 
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+        progress = 0;
+        this.callback = callback;
         try{
           loadBytes(tracks);
         } catch(IOException e){
@@ -75,7 +84,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
 
       public void loadBytes(ReadableArray tracks) throws IOException{
-        r =  new ArrayList<byte[]>();
+        allByteArrays =  new ArrayList<byte[]>();
 
         longestSmpLen = 0;
 
@@ -90,39 +99,44 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
           if(music.length > longestSmpLen){
               longestSmpLen = music.length;
           }
-          r.add(music);
+          allByteArrays.add(music);
           in.close();
         }
+
+        output = new byte[longestSmpLen];
       }
 
       public void stop(){
+        if(allByteArrays.size() == 0){
+            return;
+        }
         audioTrack.stop();
+        progress=0;
       }
 
       public void pause(){
+        if(allByteArrays.size() == 0){
+            return;
+        }
         //This results in the same behavior as stop at the moment.
         //To be fixed!
         audioTrack.pause();
       }
 
-      @Override
-      public void run(){
-        if(r.size() == 0){
+      public void mix(){
+        if(allByteArrays.size() == 0){
             return;
         }
 
-        byte[] output = new byte[longestSmpLen];
-
-        audioTrack.play();
 
         for(int i=0; i < output.length; i++){
           float mixed = 0;
 
-          for(int j= 0; j < r.size(); j++){
+          for(byte[] byArr : allByteArrays){
               float sample;
 
-              if(r.get(j).length-1 >= i){
-                sample = r.get(j)[i] / 128.0f;
+              if(byArr.length-1 >= i){
+                sample = byArr[i] / 128.0f;
               }
               else{
                 sample = 0;
@@ -138,8 +152,20 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
           output[i] = (byte)(mixed * 128.0f);
         }
+      }
+      @Override
+      public void run(){
+        if(allByteArrays.size() == 0){
+            return;
+        }
+        audioTrack.play();
 
-        audioTrack.write(output, 0, output.length);
+        int prevProgress = progress;
+        progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
+
+        if(progress == output.length){
+          progress=0;
+        }
       }
 
       private byte[] convertStreamToByteArray(InputStream is) throws IOException {

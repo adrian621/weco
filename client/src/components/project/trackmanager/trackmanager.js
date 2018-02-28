@@ -6,8 +6,6 @@ import SoundControl from './soundControl';
 import TimeLine from './timeline';
 import WecoAudio from '../../../nativemodules';
 
-
-
 export default class TrackManager extends Component {
 
   constructor(props){
@@ -85,6 +83,12 @@ export default class TrackManager extends Component {
     });
   }
 
+  componentWillUpdate(nextProps, nextState){
+    if(nextState.tracks!=this.state.tracks){
+      //Uppdatera wecoaudio mixern här!
+      this.updateSoundMixer(nextState.tracks);
+    }
+  }
   componentWillReceiveProps(nextProps){
     //Handle sampledrop
     if(nextProps.sampleDroppedAt.length!=0){
@@ -101,21 +105,31 @@ export default class TrackManager extends Component {
     }
   }
 
+  updateSoundMixer = (tracks) =>{
+    let samples = [];
+
+    for (let track of tracks){
+      if(track.sample != ""){
+        samples.push(track.sample.split('.')[0]);
+      }
+    }
+    WecoAudio.makeMixer(samples, (n)=>{
+      alert(n)
+    });
+  }
 
   play = () =>{
-    this.setState({playing: true, stopped: false, paused: false});
-
     let samples = [];
 
     for (let track of this.state.tracks){
       if(track.sample != ""){
-      samples.push(track.sample.split('.')[0]);
+        samples.push(track.sample.split('.')[0]);
       }
     }
 
-    WecoAudio.mixSound(samples,()=>{
-      //alert(txt);
-    });
+    this.setState({playing: true, stopped: false, paused: false});
+
+    WecoAudio.playSound();
   }
 
   stop = () =>{
@@ -127,7 +141,6 @@ export default class TrackManager extends Component {
     this.setState({playing: false, paused: true});
     WecoAudio.pauseSound();
   }
-
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
