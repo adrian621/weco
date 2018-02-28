@@ -8,21 +8,25 @@ import SampleBrowser from './samplebrowser/samplebrowser';
 import TrackManager from './trackmanager/trackmanager';
 import MovingSampleBox from './samplebrowser/movingsamplebox';
 import SocketIOClient from 'socket.io-client';
+import { StackNavigator } from 'react-navigation';
+
+/* THIS IS A WORKING BUILD OF weco NOT ANYTHING SPECIAL! */
 
 export default class App extends React.Component {
-  constructor(){
-      super();
+  constructor(props){
+      super(props);
 
+      let socketConfig = { path: '/socket' };
       this.state = {
           files: [],
           pan: new Animated.ValueXY(),
           movingsample: '',
           sampleDroppedAt: [],
           sampleBrowserWidth: 0,
-          socket: SocketIOClient('http://10.0.2.2:3000')
+          projectId: this.props.navigation.state.params.id
       };
 
-      //this.socket = SocketIOClient('http://10.0.2.2:3000');
+      this.socket = this.props.navigation.state.params.socket;
   }
   componentWillMount(){
     // Add a listener for the delta value change
@@ -102,8 +106,9 @@ export default class App extends React.Component {
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
-            <TrackManager socket={this.state.socket} offsetX={this.state.sampleBrowserWidth}
-              files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}></TrackManager>
+            <TrackManager socket={this.socket} offsetX={this.state.sampleBrowserWidth}
+              files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}
+              projectId={this.state.projectId}></TrackManager>
         </View>
         {this.display_movingsample()}
       </View>

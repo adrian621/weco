@@ -8,9 +8,17 @@
 function reconstructRawTracks(rawTracks, callback) {
   var recTracks = new Array(rawTracks.length);
   for(var i=0; i<rawTracks.length; i++) {
-    recTracks[i] = {trackId: i};
+    recTracks[i] = {trackId: rawTracks[i].trackNum};
   }
   callback(recTracks);
 }
 
-module.exports = {reconstructRawTracks}
+function reconstructRawProjects(rawProjects, callback) {
+  var recProjects = new Array(rawProjects.length);
+  for(var i=0; i<rawProjects.length; i++) {
+    recProjects[i] = {key: rawProjects[i].name};
+  }
+  callback(recProjects);
+}
+
+module.exports = {reconstructRawTracks, reconstructRawProjects}
