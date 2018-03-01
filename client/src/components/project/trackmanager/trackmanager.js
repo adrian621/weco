@@ -7,7 +7,6 @@ import TimeLine from './timeline';
 import WecoAudio from '../../../nativemodules';
 import { StackNavigator } from 'react-navigation';
 
-
 export default class TrackManager extends Component {
 
   constructor(props){
@@ -18,6 +17,7 @@ export default class TrackManager extends Component {
         sampleDropped:{},
         scrollOffset: 0,
         offsetY: 0,
+        visibleBars: 2,
         bpm: 96,
         playing: false,
         trackHeight: 0,
@@ -25,6 +25,7 @@ export default class TrackManager extends Component {
         totalHeight: 0,
         scrolledTrackID: 0
     };
+    WecoAudio.init(this.state.bpm, this.state.visibleBars);
 
     this.socket = this.props.socket;
 
@@ -84,6 +85,11 @@ export default class TrackManager extends Component {
     });
   }
 
+  componentWillUpdate(nextProps, nextState){
+    if(nextState.tracks!=this.state.tracks){
+      this.updateSoundMixer(nextState.tracks);
+    }
+  }
   componentWillReceiveProps(nextProps){
     //Handle sampledrop
     //this.setState({projectId: this.props.navigation.state.id});
@@ -101,21 +107,32 @@ export default class TrackManager extends Component {
     }
   }
 
+  updateSoundMixer = (tracks) =>{
+    let samples = [];
+
+    for (let track of tracks){
+      if(track.sample != ""){
+        samples.push(track.sample.split('.')[0]);
+      }
+    }
+    WecoAudio.mix(samples);
+  }
 
   play = () =>{
+    if(this.state.playing){
+      return;
+    }
     this.setState({playing: true, stopped: false, paused: false});
 
     let samples = [];
 
     for (let track of this.state.tracks){
       if(track.sample != ""){
-      samples.push(track.sample.split('.')[0]);
+        samples.push(track.sample.split('.')[0]);
       }
     }
 
-    WecoAudio.mixSound(samples,(s)=>{
-      console.log(s);
-    });
+    WecoAudio.playSound();
   }
 
   stop = () =>{
@@ -127,7 +144,6 @@ export default class TrackManager extends Component {
     this.setState({playing: false, paused: true});
     WecoAudio.pauseSound();
   }
-
 
   addNewTrack = () => {
     let tracks = this.state.tracks;
@@ -142,7 +158,6 @@ export default class TrackManager extends Component {
   }
 
   handleTrackLayout = (height,width,marginBottom,placeInList) =>{
-    //alert(placeInList);
     let y = placeInList*(height+marginBottom);
 
     let tracks = this.state.tracks;
@@ -226,6 +241,10 @@ export default class TrackManager extends Component {
     this.stop();
   }
 
+  handleTimeChange = (val) =>{
+    WecoAudio.setTimeMarker(val);
+  }
+
   render() {
     let tListHeight = 0;
     if(this.state.tracks.length!=0){
@@ -243,7 +262,8 @@ export default class TrackManager extends Component {
           <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
         </View>
         <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
-           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={2}></TimeLine>
+           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
+           onSlideComplete={this.handleTimeChange}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
           <View style={{height:tListHeight}}>
             <FlatList
