@@ -150,8 +150,8 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
               else{
                 sample = 0.0f;
               }
-              mixed = mixed + sample  - (mixed*sample);
 
+              mixed = mixed + sample  - (mixed*sample);
           }
 
           if (mixed > 1.0f) mixed = 1.0f;
