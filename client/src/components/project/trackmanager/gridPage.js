@@ -42,5 +42,14 @@ let styles = StyleSheet.create({
   },
   sampleText: {
     textAlign: 'center'
+  },
+  sample: {
+    flex: 1,
+    height: '100%',
+    width: '45%',
+    borderWidth:1,
+    borderColor:'black',
+    position: 'absolute',
+    backgroundColor: "white",
   }
 })

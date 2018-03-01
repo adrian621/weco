@@ -1,7 +1,18 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, ScrollView, FlatList } from 'react-native';
 import GridPage from './gridPage';
 
+/*
+  samplesPos, the element should consists of:
+    {
+      width: the width in % (length of audio file / gridPage length in milisec)
+      page: page index in the 'samples' state (For finding what sample)
+      index: box index in the 'samples' state (For finding what sample)
+    },
+
+  TODO:
+    find a good way to handle samples that exceed the end of a gridPage
+*/
 export default class Track extends Component {
   constructor(props){
     super(props);
@@ -10,7 +21,8 @@ export default class Track extends Component {
         height: 0,
         sample: '',
         page: 0,
-        samples: [['','','','']]
+        samples: [['','','','']],
+        samplesPos: []
     };
 
     this.socket = this.props.socket;
@@ -63,6 +75,11 @@ export default class Track extends Component {
             this.props.onSampleDrop({trackID: this.props.id, sample: sampleData[0]});
             this.socket.emit('new-sample-track', {projectID: this.props.projectId, trackID: this.props.id, name: sampleData[0], ind: indSampleBox, page: page});
           });
+
+          let currPos = this.state.samplesPos;
+          let lenAudio = '50%'; //Change so that it's actual the sample's length compared to the page length
+          currPos.push({width: lenAudio, page: page, ind: indSampleBox});
+          this.setState({samplesPos: currPos});
         });
       }
   }
@@ -90,6 +107,19 @@ export default class Track extends Component {
     this.setState({page: pageNum});
   }
 
+  handleSampleMargin = (ind) => {
+    let proc = ind * 25;
+    let margin = proc.toString() + '%';
+
+    return margin;
+  }
+
+  displaySample = (sample) => {
+    return (
+      <View style={styles.sample}></View>
+    )
+  }
+
   render() {
 
     //<Text style = {{textAlign: 'center'}}>Track #{this.props.id} PlaceInlist: {this.props.placeInList} {'\n'} ({this.state.sample})</Text>
@@ -100,6 +130,12 @@ export default class Track extends Component {
         <TouchableOpacity style={styles.trackCont} onLongPress={this.onLongPress}>
           <Animated.View style={{flex: 1}}>
             <GridPage samples={this.state.samples[this.state.page]}> </GridPage>
+            <FlatList
+              data={this.state.samplesPos}
+              extraData={this.state}
+              renderItem={({item}) => this.displaySample(item)}
+              keyExtractor={(item, index) => index}
+            />
           </Animated.View>
         </TouchableOpacity>
       </View>
@@ -117,5 +153,14 @@ const styles = StyleSheet.create({
   },
   trackCont: {
     flex: 1
+  },
+  sample: {
+    flex: 1,
+    height: '100%',
+    width: '45%',
+    borderWidth:1,
+    borderColor:'black',
+    position: 'absolute',
+    backgroundColor: "white",
   }
 });
