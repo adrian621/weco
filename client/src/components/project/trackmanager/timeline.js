@@ -73,7 +73,6 @@ export default class TimeLine extends Component {
   }
 
   pauseTimeLine = () =>{
-    //wecoaudio progress must be updated here
     this.props.onSlideComplete(this.state.time/this.state.maxValue);
     this.setState({paused: true})
   }

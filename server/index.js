@@ -7,6 +7,7 @@ var jsonParser = require('./jsonParser');
 var db;
 
 var clients = {};
+var namespaces = [];
 /*
   Connect and store an open connection to the mongoDB aswell as running the
   node.js server on 'http://localhost:3000'.
@@ -30,20 +31,59 @@ mongoUtil.connectToServer(function(err) {
 */
 io.on('connection', function (socket) {
   console.log('User connected!');
+
+  dbHandler.getAllProjects(db, (rawProjects) => {
+    jsonParser.reconstructRawProjects(rawProjects, (projects) => {
+      //console.log(projects);
+      socket.emit('rec-projects', projects);
+    });
+  });
+  /*
+  socket.on('get-projects', () => {
+    console.log('Client asking for all projects!');
+    dbHandler.getAllProjects(db, (rawProjects) => {
+      jsonParser.reconstructRawProjects(rawProjects, (projects) => {
+        console.log(projects);
+        socket.emit('rec-projects', projects);
+      });
+    });
+  });
+  */
+
   /*
     Send all tracks to a newly connected client.
 
     CHANGE WHAT 'ProjectX' IS CALLED WHEN ROOMS ARE ADDED
   */
-  dbHandler.tracksFromProjectID(db, "project1", (tracks) => {
-    jsonParser.reconstructRawTracks(tracks, (res) => {
-      socket.emit('on-connect', res);
+  socket.on('get-project', (projectInfo) => {
+    dbHandler.tracksFromProjectID(db, projectInfo.id, (tracks) => {
+      jsonParser.reconstructRawTracks(tracks, (res) => {
+        socket.emit('on-connect', res);
+      });
+    });
+  });
+
+  socket.on('create-project', (projectInfo) => {
+      socket.broadcast.emit('new-project', projectInfo.id);
+      socket.join(projectInfo.id);
+      dbHandler.createProject(db, projectInfo.id, (id) => {
+      });
+  });
+
+  socket.on('join-project', (projectInfo) => {
+    socket.join(projectInfo.id);
+  });
+
+  socket.on('del-project', (projectInfo) => {
+    console.log('project ' + projectInfo.id + ' was deleted!');
+    dbHandler.removeProject(db, projectInfo.id, (id) => {
+      socket.broadcast.emit('get-del-project', projectInfo.id);
     });
   });
 
   socket.on('get-curr-samples', (projectInfo) => {
     var projectID = projectInfo.projectID;
-    dbHandler.samplesFromProjectID(db, 1, (samples) => {
+    dbHandler.samplesFromProjectID(db, projectInfo, (samples) => {
       // _id is sent with all tracks, can be removed with a new function
       // in jsonParser.js (not written yet tho')
       socket.emit('on-connect-samples', samples);
@@ -52,7 +92,7 @@ io.on('connection', function (socket) {
 
   socket.on('new-sample-track', (sampleInfo) => {
     dbHandler.addNewSampleTrack(db, sampleInfo, (res) => {
-      socket.broadcast.emit('update-track', res);
+      socket.broadcast.to(sampleInfo.projectID).emit('update-track', res);
     });
   });
 
@@ -62,7 +102,8 @@ io.on('connection', function (socket) {
   */
   socket.on('new-track', (trackInfo) => {
     dbHandler.addNewTrack(db, trackInfo, (id) => {
-      socket.broadcast.emit('get-new-track', id);
+      //console.log(nsp);
+      socket.broadcast.to(trackInfo.projectID).emit('get-new-track', id);
     });
   });
 
