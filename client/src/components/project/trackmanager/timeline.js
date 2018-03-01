@@ -58,6 +58,7 @@ export default class TimeLine extends Component {
         if(this.state.stopped || this.state.time>=this.state.maxValue){
           clearInterval(timer);
           this.setState({time: 0})
+          this.props.onSlideComplete(0);
           this.props.playDone();
         }
         if(this.state.paused){
@@ -72,11 +73,19 @@ export default class TimeLine extends Component {
   }
 
   pauseTimeLine = () =>{
+    this.props.onSlideComplete(this.state.time/this.state.maxValue);
     this.setState({paused: true})
   }
 
   setMaxValue = (bpm) =>{
     this.setState({maxValue: (4*this.props.bars/bpm)*60*1000})
+  }
+
+  handleSlideComplete = (val)=>{
+    this.setState({time: val})
+
+    //Convert ms to percentage
+    this.props.onSlideComplete(val/this.state.maxValue);
   }
 
   displayPoints = ()=>{
@@ -98,7 +107,8 @@ export default class TimeLine extends Component {
 
     return(
       <View onLayout={this.handleLayout} style={styles.line}>
-        <Slider maximumValue={this.state.maxValue}  value={this.state.time} removeClippedSubviews={true} style={styles.slider}></Slider>
+        <Slider maximumValue={this.state.maxValue}  value={this.state.time} removeClippedSubviews={true}
+          onSlidingComplete={this.handleSlideComplete} style={styles.slider}></Slider>
         {this.displayPoints()}
       </View>
     );
