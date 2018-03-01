@@ -25,7 +25,6 @@ import java.lang.Math;
 public class WecoAudioModule extends ReactContextBaseJavaModule {
     private SoundMixer sMixer;
     private float timeMarker;
-    private float maxValue;
 
     public WecoAudioModule(ReactApplicationContext reactContext) {
       super(reactContext);
@@ -33,15 +32,31 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void playSound(){
+    public void init(float bpm, int visibleBars){
+      sMixer.setProperties(bpm, visibleBars);
+    }
 
+    //Will be used when BPM is adjustable
+    @ReactMethod
+    public void setBPM(float bpm){
+      sMixer.setBPM(bpm);
+    }
+
+    //Will be used when bars visible is adjustable
+    @ReactMethod
+    public void setBars(int visibleBars){
+      sMixer.setBars(visibleBars);
+    }
+
+    @ReactMethod
+    public void playSound(){
       AsyncTask.execute(sMixer);
     }
 
     @ReactMethod
-    public void mix(ReadableArray tracks, Callback callback){
+    public void mix(ReadableArray tracks){
       sMixer.mix(tracks);
-      callback.invoke(sMixer.setTimeMarker(this.timeMarker, this.maxValue));
+      sMixer.setTimeMarker(this.timeMarker);
     }
 
     @ReactMethod
@@ -55,22 +70,25 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setTimeMarker(float timeMarker, float maxValue){
+    public void setTimeMarker(float timeMarker){
       this.timeMarker = timeMarker;
-      this.maxValue = maxValue;
-      sMixer.setTimeMarker(this.timeMarker, this.maxValue);
+      sMixer.setTimeMarker(this.timeMarker);
     }
 
     //Inner class for mixing and playing sounds
     //Can be used with AsyncTask.execute()
     private class SoundMixer implements Runnable{
-      AudioTrack audioTrack;
+      private AudioTrack audioTrack;
       private int longestSmpLen;
       private int progress;
       private int roundedProgress;
       private Callback callback;
       private byte[] output;
       private float timeMarker;
+      private float bpm;
+      private int visibleBars;
+      private int maxValue;
+
       private ArrayList<byte[]> allByteArrays;
 
       public SoundMixer(){
@@ -79,18 +97,35 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         allByteArrays =  new ArrayList<byte[]>();
         longestSmpLen = 0;
         progress = 0;
-        maxValue = 1;
+        bpm = 0;
+        visibleBars = 0;
+        maxValue = 0;
       }
 
-      public int setTimeMarker(float timeMarker, float maxValue){
-        //Fix so that timemarker cant be dragged longer than longestsmpllen
-        if(timeMarker!=0){
-          progress = (int)Math.round(longestSmpLen*timeMarker);
-          roundedProgress = progress%16;
-          progress = progress-(roundedProgress%16);
-        }
+      public void setBPM(float bpm){
+        this.bpm = bpm;
+        maxValue = (int)((4*this.visibleBars/this.bpm)*60);
+        //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
+        maxValue = maxValue*44100*4;
+      }
 
-        return progress;
+      public void setBars(int visibleBars){
+        this.visibleBars = visibleBars;
+        maxValue = (int)((4*this.visibleBars/this.bpm)*60);
+        //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
+        maxValue = maxValue*44100*4;
+      }
+
+
+      public void setProperties(float bpm, int visibleBars){
+        this.setBPM(bpm);
+        this.setBars(visibleBars);
+      }
+
+      public void setTimeMarker(float timeMarker){
+        progress = (int)Math.round(maxValue*timeMarker);
+        roundedProgress = progress%16;
+        progress = progress-(roundedProgress%16);
       }
 
       public void loadBytes(ReadableArray tracks) throws IOException{
@@ -113,7 +148,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
           in.close();
         }
 
-        output = new byte[longestSmpLen];
+        output = new byte[this.maxValue];
       }
 
       public void stop(){
@@ -132,6 +167,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         //This results in the same behavior as stop at the moment.
         //To be fixed!
         audioTrack.pause();
+        audioTrack.flush();
       }
 
       public void mix(ReadableArray tracks){
@@ -169,10 +205,10 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
       @Override
       public void run(){
-
         if(allByteArrays.size() == 0){
             return;
         }
+
         audioTrack.play();
 
         int prevProgress = progress;

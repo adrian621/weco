@@ -16,6 +16,7 @@ export default class TrackManager extends Component {
         sampleDropped:{},
         scrollOffset: 0,
         offsetY: 0,
+        visibleBars: 2,
         bpm: 96,
         playing: false,
         trackHeight: 0,
@@ -24,6 +25,7 @@ export default class TrackManager extends Component {
         scrolledTrackID: 0,
     };
 
+    WecoAudio.init(this.state.bpm, this.state.visibleBars);
     this.socket = this.props.socket;
 
     this.socket.on('on-connect', (res) => {
@@ -112,9 +114,7 @@ export default class TrackManager extends Component {
         samples.push(track.sample.split('.')[0]);
       }
     }
-    WecoAudio.mix(samples,(txt)=>{
-      
-    });
+    WecoAudio.mix(samples);
   }
 
   play = () =>{
@@ -237,8 +237,8 @@ export default class TrackManager extends Component {
     this.stop();
   }
 
-  handleTimeChange = (val, maxValue) =>{
-    WecoAudio.setTimeMarker(val, maxValue);
+  handleTimeChange = (val) =>{
+    WecoAudio.setTimeMarker(val);
   }
 
   render() {
@@ -258,7 +258,7 @@ export default class TrackManager extends Component {
           <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
         </View>
         <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
-           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={2}
+           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
            onSlideComplete={this.handleTimeChange}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
           <View style={{height:tListHeight}}>

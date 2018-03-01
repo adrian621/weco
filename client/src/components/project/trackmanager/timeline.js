@@ -58,6 +58,7 @@ export default class TimeLine extends Component {
         if(this.state.stopped || this.state.time>=this.state.maxValue){
           clearInterval(timer);
           this.setState({time: 0})
+          this.props.onSlideComplete(0);
           this.props.playDone();
         }
         if(this.state.paused){
@@ -73,7 +74,7 @@ export default class TimeLine extends Component {
 
   pauseTimeLine = () =>{
     //wecoaudio progress must be updated here
-    //this.props.onSlideComplete(this.state.time/this.state.maxValue, this.state.maxValue);
+    this.props.onSlideComplete(this.state.time/this.state.maxValue);
     this.setState({paused: true})
   }
 
@@ -85,7 +86,7 @@ export default class TimeLine extends Component {
     this.setState({time: val})
 
     //Convert ms to percentage
-    this.props.onSlideComplete(val/this.state.maxValue, this.state.maxValue);
+    this.props.onSlideComplete(val/this.state.maxValue);
   }
 
   displayPoints = ()=>{
