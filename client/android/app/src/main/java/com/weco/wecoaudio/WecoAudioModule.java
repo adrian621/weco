@@ -31,6 +31,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       sMixer = new SoundMixer();
     }
 
+    @ReactMethod
     public void init(float bpm, int visibleBars){
       sMixer.setProperties(bpm, visibleBars);
     }
@@ -207,7 +208,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         if(allByteArrays.size() == 0){
             return;
         }
-        
+
         audioTrack.play();
         int prevProgress = progress;
         progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
