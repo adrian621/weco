@@ -85,7 +85,6 @@ export default class TrackManager extends Component {
 
   componentWillUpdate(nextProps, nextState){
     if(nextState.tracks!=this.state.tracks){
-      //Uppdatera wecoaudio mixern här!
       this.updateSoundMixer(nextState.tracks);
     }
   }
@@ -113,7 +112,9 @@ export default class TrackManager extends Component {
         samples.push(track.sample.split('.')[0]);
       }
     }
-    WecoAudio.mix(samples);
+    WecoAudio.mix(samples,(txt)=>{
+      
+    });
   }
 
   play = () =>{
@@ -153,7 +154,6 @@ export default class TrackManager extends Component {
   }
 
   handleTrackLayout = (height,width,marginBottom,placeInList) =>{
-    //alert(placeInList);
     let y = placeInList*(height+marginBottom);
 
     let tracks = this.state.tracks;
@@ -237,6 +237,10 @@ export default class TrackManager extends Component {
     this.stop();
   }
 
+  handleTimeChange = (val, maxValue) =>{
+    WecoAudio.setTimeMarker(val, maxValue);
+  }
+
   render() {
     let tListHeight = 0;
     if(this.state.tracks.length!=0){
@@ -254,7 +258,8 @@ export default class TrackManager extends Component {
           <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
         </View>
         <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
-           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={2}></TimeLine>
+           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={2}
+           onSlideComplete={this.handleTimeChange}></TimeLine>
         <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
           <View style={{height:tListHeight}}>
             <FlatList

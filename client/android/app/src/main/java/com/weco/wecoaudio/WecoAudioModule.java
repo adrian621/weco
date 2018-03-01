@@ -7,7 +7,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReadableArray;
-import java.util.ArrayList;
+
 
 import android.media.AudioTrack;
 import android.media.AudioManager;
@@ -17,11 +17,15 @@ import android.os.AsyncTask;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.lang.Math;
 
 
 
 public class WecoAudioModule extends ReactContextBaseJavaModule {
     private SoundMixer sMixer;
+    private float timeMarker;
+    private float maxValue;
 
     public WecoAudioModule(ReactApplicationContext reactContext) {
       super(reactContext);
@@ -30,18 +34,14 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void playSound(){
+
       AsyncTask.execute(sMixer);
     }
 
     @ReactMethod
-    public void makeMixer(ReadableArray tracks, Callback callback){
-      sMixer = new SoundMixer(tracks, callback);
+    public void mix(ReadableArray tracks, Callback callback){
       sMixer.mix(tracks);
-    }
-
-    @ReactMethod
-    public void mix(ReadableArray tracks){
-      sMixer.mix(tracks);
+      callback.invoke(sMixer.setTimeMarker(this.timeMarker, this.maxValue));
     }
 
     @ReactMethod
@@ -54,37 +54,43 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       sMixer.pause();
     }
 
+    @ReactMethod
+    public void setTimeMarker(float timeMarker, float maxValue){
+      this.timeMarker = timeMarker;
+      this.maxValue = maxValue;
+      sMixer.setTimeMarker(this.timeMarker, this.maxValue);
+    }
+
     //Inner class for mixing and playing sounds
     //Can be used with AsyncTask.execute()
     private class SoundMixer implements Runnable{
       AudioTrack audioTrack;
       private int longestSmpLen;
       private int progress;
+      private int roundedProgress;
       private Callback callback;
       private byte[] output;
+      private float timeMarker;
       private ArrayList<byte[]> allByteArrays;
 
       public SoundMixer(){
         if(audioTrack!=null) audioTrack.release();
-
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
         allByteArrays =  new ArrayList<byte[]>();
         longestSmpLen = 0;
         progress = 0;
+        maxValue = 1;
       }
 
-      public SoundMixer(ReadableArray tracks, Callback callback){
-        if(audioTrack!=null) audioTrack.release();
-
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
-        progress = 0;
-
-        this.callback = callback;
-        try{
-          loadBytes(tracks);
-        } catch(IOException e){
-          System.err.println("Caught IOException: " + e.getMessage());
+      public int setTimeMarker(float timeMarker, float maxValue){
+        //Fix so that timemarker cant be dragged longer than longestsmpllen
+        if(timeMarker!=0){
+          progress = (int)Math.round(longestSmpLen*timeMarker);
+          roundedProgress = progress%16;
+          progress = progress-(roundedProgress%16);
         }
+
+        return progress;
       }
 
       public void loadBytes(ReadableArray tracks) throws IOException{
@@ -115,6 +121,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
             return;
         }
         audioTrack.stop();
+        audioTrack.flush();
         progress=0;
       }
 
@@ -162,15 +169,17 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
       @Override
       public void run(){
+
         if(allByteArrays.size() == 0){
             return;
         }
         audioTrack.play();
 
         int prevProgress = progress;
-        progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
 
-        if(progress == output.length){
+        progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
+        // audioTrack.flush();
+        if(progress+roundedProgress == output.length){
           progress=0;
         }
       }
