@@ -119,6 +119,9 @@ export default class TrackManager extends Component {
   }
 
   play = () =>{
+    if(this.state.playing){
+      return;
+    }
     this.setState({playing: true, stopped: false, paused: false});
 
     let samples = [];
@@ -128,8 +131,6 @@ export default class TrackManager extends Component {
         samples.push(track.sample.split('.')[0]);
       }
     }
-
-    this.setState({playing: true, stopped: false, paused: false});
 
     WecoAudio.playSound();
   }
