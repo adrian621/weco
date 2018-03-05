@@ -260,7 +260,6 @@ export default class TrackManager extends Component {
     this.stop();
   }
 
-<<<<<<< HEAD
   onSwipeLeft = (gestureState) => {
     if(this.state.gridPage == this.state.numPages-1) {
       return
@@ -289,10 +288,10 @@ export default class TrackManager extends Component {
       case SWIPE_RIGHT:
         break;
     }
-=======
+  }
+
   handleTimeChange = (val) =>{
     WecoAudio.setTimeMarker(val);
->>>>>>> be9cfb59527c663ac944a3df86ead0f81b532548
   }
 
   render() {
@@ -311,13 +310,13 @@ export default class TrackManager extends Component {
     };
 
     return (
-<<<<<<< HEAD
         <View style={styles.container}>
           <View style = {styles.SoundControlContainer} onLayout={this.handleSCLayout}>
             <SoundControl onPlay = {this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
           </View>
           <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
-           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={2}></TimeLine>
+           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
+           onSlideComplete={this.handleTimeChange}></TimeLine>
           <GestureRecognizer
             onSwipe={(direction, state) => this.onSwipe(direction, state)}
             onSwipeLeft={(state) => this.onSwipeLeft(state)}
@@ -339,25 +338,6 @@ export default class TrackManager extends Component {
                   />
                 </View>
             <NewTrackButton onLayout={this.handleNTBLayout} OnNewTrack = {this.addNewTrack}></NewTrackButton>
-=======
-      <View style={styles.container}>
-        <View style={styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-          <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
-        </View>
-        <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
-           playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
-           onSlideComplete={this.handleTimeChange}></TimeLine>
-        <View style = {styles.TrackMContainer} onLayout={this.handleTMLayout}>
-          <View style={{height:tListHeight}}>
-            <FlatList
-              data={this.state.tracks}
-              extraData={this.state}
-              onScroll={this.handleScroll}
-              renderItem={({item}) => this.displayTrack(item)}
-              keyExtractor={(item, index) => index}
-            />
-
->>>>>>> be9cfb59527c663ac944a3df86ead0f81b532548
           </View>
         </GestureRecognizer>
         </View>

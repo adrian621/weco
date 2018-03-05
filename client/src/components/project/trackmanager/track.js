@@ -114,7 +114,7 @@ export default class Track extends Component {
     return margin;
   }
 
-  displaySample = (sample) => {
+  displaySamples = (sample) => {
     return (
       <View style={styles.sample}></View>
     )
@@ -130,12 +130,6 @@ export default class Track extends Component {
         <TouchableOpacity style={styles.trackCont} onLongPress={this.onLongPress}>
           <Animated.View style={{flex: 1}}>
             <GridPage samples={this.state.samples[this.state.page]}> </GridPage>
-            <FlatList
-              data={this.state.samplesPos}
-              extraData={this.state}
-              renderItem={({item}) => this.displaySample(item)}
-              keyExtractor={(item, index) => index}
-            />
           </Animated.View>
         </TouchableOpacity>
       </View>
