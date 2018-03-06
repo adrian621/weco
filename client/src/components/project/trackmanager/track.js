@@ -53,6 +53,8 @@ export default class Track extends Component {
   }*/
 
 
+
+
   handleSampleDrop = (sampleData) => {
     let sample = sampleData[0];
     let sampleX = sampleData[1]-this.props.offsetX;
@@ -79,10 +81,11 @@ export default class Track extends Component {
           let currPos = this.state.samplesPos;
           let lenAudio = '50%'; //Change so that it's actual the sample's length compared to the page length
           currPos.push({width: lenAudio, page: page, ind: indSampleBox});
-          this.setState({samplesPos: currPos});
+          this.setState({samplesPos: currPos}, () =>{ this.props.updateSamples(this.state.samples, this.props.id);});
         });
       }
   }
+
 
   updateSampleBox = (sample, id) => {
     let updated_track = [...this.state.samples];
