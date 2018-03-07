@@ -138,7 +138,6 @@ export default class TrackManager extends Component {
 
 
   updateSoundMixer = (tracks) => {
-    alert('asddas');
     let samples = [];
     for (let track of tracks) {
       let pages = track.samples;

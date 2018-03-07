@@ -106,14 +106,14 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         this.bpm = bpm;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4;
+        maxValue = maxValue*44100*4*2;
       }
 
       public void setBars(int visibleBars){
         this.visibleBars = visibleBars;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4;
+        maxValue = maxValue*44100*4*2;
       }
 
 
@@ -129,71 +129,68 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
 
 
-     public void loadBytes2(ReadableArray track) throws IOException{
+     public byte[] concatTrack(ReadableArray track) throws IOException{
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-      
-      byte[] c = new byte[44100*4*10];
-      //System.arraycopy(a, 0, c, 0, a.length);
-     // System.arraycopy(b, 0, c, a.length, b.length);
 
+      byte [] c = new byte[44100*4*15];
+      int sampleEndInd = 0;
 
-      //byte [] concated = new byte[44100*4*10];
       byte [] emptySample = new byte[44100*5];
-      
-      for(int i = 0; i < track.size(); i++){  
+
+      for(int i = 0; i < track.size(); i++){
           if (track.getString(i).equals("")){
-            //outputStream.write (emptySample);
-            System.arraycopy(emptySample, 0, c, i*4*44100, emptySample.length);
+            if(i >= sampleEndInd) {
+                System.arraycopy(emptySample, 0, c, i*5*44100, emptySample.length);
+            }
           }
-          else 
+          else
           {
-          InputStream in =  getReactApplicationContext().getResources().openRawResource(
-          getReactApplicationContext().getResources().getIdentifier(track.getString(i),
-          "raw", getReactApplicationContext().getPackageName()));
-          byte[] music = null;
-          music = new byte[in.available()];
-          music = convertStreamToByteArray(in);
-          System.arraycopy(music, 0, c, i*4*44100, music.length);
-          in.close();
+            InputStream in =  getReactApplicationContext().getResources().openRawResource(
+            getReactApplicationContext().getResources().getIdentifier(track.getString(i),
+            "raw", getReactApplicationContext().getPackageName()));
+            byte[] music = null;
+            music = new byte[in.available()];
+            music = convertStreamToByteArray(in);
+            System.arraycopy(music, 0, c, i*5*44100, music.length);
+            sampleEndInd = i*5*44100+music.length;
+            in.close();
           }
-          
-
-     }
-            //byte concated[] = outputStream.toByteArray( );
-            output = c;
-
-
+        }
+      //output = c;
+      output = new byte[c.length];
+      return(c);
      }
 
-/*
       public void loadBytes(ReadableArray tracks) throws IOException{
-        allByteArrays =  new ArrayList<byte[]>();
+        //allByteArrays =  new ArrayList<byte[]>();
 
-        longestSmpLen = 0;
-
-
-      for(int i = 0; i < tracks.size(); i++){
-        for(int j = 0; j < tracks[i].size(); j++){
-          InputStream in =  getReactApplicationContext().getResources().openRawResource(
-          getReactApplicationContext().getResources().getIdentifier(tracks[i].getString(j),
-          "raw", getReactApplicationContext().getPackageName()));
-
-          byte[] music = null;
-          music = new byte[in.available()];
-          music = convertStreamToByteArray(in);
-          
-          if(music.length > longestSmpLen){
-              longestSmpLen = music.length;
-          }
-          
-          allByteArrays.add(music);
-          in.close();
+        for(int i=0; i<tracks.size(); i++) {
+          byte [] track = concatTrack(tracks.getArray(i));
+          allByteArrays.add(track);
         }
 
-        output = new byte[this.maxValue];
+        for(int i=0; i < output.length; i++){
+          float mixed = 0.0f;
+
+          for(byte[] byArr : allByteArrays){
+              float sample;
+
+              if(byArr.length-1 >= i){
+                sample = byArr[i] / 128.0f;
+              }
+              else{
+                sample = 0.0f;
+              }
+
+              mixed = mixed + sample  - (mixed*sample);
+          }
+
+          if (mixed > 1.0f) mixed = 1.0f;
+          if (mixed < -1.0f) mixed = -1.0f;
+
+          output[i] = (byte)((mixed) * 128.0f);
+        }
       }
-      }
-      */
 
       public void stop(){
         if(allByteArrays.size() == 0){
@@ -215,53 +212,16 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
 
       public void mix(ReadableArray tracks){
-        
-        try {
-          loadBytes2(tracks.getArray(0));
-        } catch(IOException e){
-          System.err.println("Caught IOException: " + e.getMessage());
-        }
 
-        /*
-        try{
+        try {
           sMixer.loadBytes(tracks);
         } catch(IOException e){
           System.err.println("Caught IOException: " + e.getMessage());
         }
-
-        if(allByteArrays.size() == 0){
-            return;
-        }
-
-        for(int i=0; i <= output.length; i++){
-          float mixed = 0.0f;
-
-          for(byte[] byArr : allByteArrays){
-              float sample;
-
-              if(byArr.length-1 >= i){
-                sample = byArr[i] / 128.0f;
-              }
-              else{
-                sample = 0.0f;
-              }
-
-              mixed = mixed + sample  - (mixed*sample);
-          }
-
-          if (mixed > 1.0f) mixed = 1.0f;
-          if (mixed < -1.0f) mixed = -1.0f;
-
-          output[i] = (byte)((mixed) * 128.0f);
-        }
-        */
       }
+
       @Override
       public void run(){
-        if(allByteArrays.size() == 0){
-            return;
-        }
-
         audioTrack.play();
         int prevProgress = progress;
         progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
