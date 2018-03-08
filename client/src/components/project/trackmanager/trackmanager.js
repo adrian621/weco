@@ -286,7 +286,7 @@ export default class TrackManager extends Component {
     }
 
     handlePlayDone = () => {
-      this.stop();
+      //this.stop();
     }
 
     onSwipeLeft = (gestureState) => {

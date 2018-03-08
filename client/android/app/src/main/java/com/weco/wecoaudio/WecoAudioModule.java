@@ -162,7 +162,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
      }
 
       public void loadBytes(ReadableArray tracks) throws IOException{
-        //allByteArrays =  new ArrayList<byte[]>();
+       allByteArrays =  new ArrayList<byte[]>();
 
         for(int i=0; i<tracks.size(); i++) {
           byte [] track = concatTrack(tracks.getArray(i));
