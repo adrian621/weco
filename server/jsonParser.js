@@ -8,7 +8,7 @@
 function reconstructRawTracks(rawTracks, callback) {
   var recTracks = new Array(rawTracks.length);
   for(var i=0; i<rawTracks.length; i++) {
-    recTracks[i] = {trackId: rawTracks[i].trackNum};
+    recTracks[i] = {trackId: rawTracks[i].trackNum, samples: [['', '', '', ''],['', '', '', '']]};
   }
   callback(recTracks);
 }

@@ -106,14 +106,14 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         this.bpm = bpm;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4;
+        maxValue = maxValue*44100*4*2;
       }
 
       public void setBars(int visibleBars){
         this.visibleBars = visibleBars;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4;
+        maxValue = maxValue*44100*4*2;
       }
 
 
@@ -128,57 +128,45 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         progress = progress-(roundedProgress%16);
       }
 
-      public void loadBytes(ReadableArray tracks) throws IOException{
-        allByteArrays =  new ArrayList<byte[]>();
 
-        longestSmpLen = 0;
+     public byte[] concatTrack(ReadableArray track) throws IOException{
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
 
-        for(int i = 0; i < tracks.size(); i++){
-          InputStream in =  getReactApplicationContext().getResources().openRawResource(
-          getReactApplicationContext().getResources().getIdentifier(tracks.getString(i),
-          "raw", getReactApplicationContext().getPackageName()));
+      byte [] c = new byte[44100*4*15];
+      int sampleEndInd = 0;
 
-          byte[] music = null;
-          music = new byte[in.available()];
-          music = convertStreamToByteArray(in);
-          if(music.length > longestSmpLen){
-              longestSmpLen = music.length;
+      byte [] emptySample = new byte[44100*5];
+
+      for(int i = 0; i < track.size(); i++){
+          if (track.getString(i).equals("")){
+            if(i >= sampleEndInd) {
+                System.arraycopy(emptySample, 0, c, i*5*44100, emptySample.length);
+            }
           }
-          allByteArrays.add(music);
-          in.close();
+          else
+          {
+            InputStream in =  getReactApplicationContext().getResources().openRawResource(
+            getReactApplicationContext().getResources().getIdentifier(track.getString(i),
+            "raw", getReactApplicationContext().getPackageName()));
+            byte[] music = null;
+            music = new byte[in.available()];
+            music = convertStreamToByteArray(in);
+            System.arraycopy(music, 0, c, i*5*44100, music.length);
+            sampleEndInd = i*5*44100+music.length;
+            in.close();
+          }
         }
+      //output = c;
+      output = new byte[c.length];
+      return(c);
+     }
 
-        output = new byte[this.maxValue];
-      }
+      public void loadBytes(ReadableArray tracks) throws IOException{
+       allByteArrays =  new ArrayList<byte[]>();
 
-      public void stop(){
-        if(allByteArrays.size() == 0){
-            return;
-        }
-        audioTrack.stop();
-        audioTrack.flush();
-        progress=0;
-      }
-
-      public void pause(){
-        if(allByteArrays.size() == 0){
-            return;
-        }
-        //This results in the same behavior as stop at the moment.
-        //To be fixed!
-        audioTrack.pause();
-        audioTrack.flush();
-      }
-
-      public void mix(ReadableArray tracks){
-        try{
-          sMixer.loadBytes(tracks);
-        } catch(IOException e){
-          System.err.println("Caught IOException: " + e.getMessage());
-        }
-
-        if(allByteArrays.size() == 0){
-            return;
+        for(int i=0; i<tracks.size(); i++) {
+          byte [] track = concatTrack(tracks.getArray(i));
+          allByteArrays.add(track);
         }
 
         for(int i=0; i < output.length; i++){
@@ -203,12 +191,37 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
           output[i] = (byte)((mixed) * 128.0f);
         }
       }
-      @Override
-      public void run(){
+
+      public void stop(){
         if(allByteArrays.size() == 0){
             return;
         }
+        audioTrack.stop();
+        audioTrack.flush();
+        progress=0;
+      }
 
+      public void pause(){
+        if(allByteArrays.size() == 0){
+            return;
+        }
+        //This results in the same behavior as stop at the moment.
+        //To be fixed!
+        audioTrack.pause();
+        audioTrack.flush();
+      }
+
+      public void mix(ReadableArray tracks){
+
+        try {
+          sMixer.loadBytes(tracks);
+        } catch(IOException e){
+          System.err.println("Caught IOException: " + e.getMessage());
+        }
+      }
+
+      @Override
+      public void run(){
         audioTrack.play();
         int prevProgress = progress;
         progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
