@@ -17,7 +17,7 @@ export default class SampleBrowser extends Component {
   }
 
   write_dummy_samples() {
-    for(var i=1;i<=3;i++){
+    for(var i=1;i<=5;i++){
       let sample = '/sample'+i+'.wav';
       RNFS.writeFile(RNFS.DocumentDirectoryPath+sample, 'tomt :(', 'utf8')
         .then((success) => {
