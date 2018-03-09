@@ -84,6 +84,7 @@ public class WecoRecordingModule extends ReactContextBaseJavaModule {
         // android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
         mStop = false;
+        int iterator = 0;
 
         String fullFileName = fileName+"_"+Integer.toString(fileIndex)+".wav";
         String filePath = storagePath+"/"+fullFileName;
@@ -109,6 +110,10 @@ public class WecoRecordingModule extends ReactContextBaseJavaModule {
         }
 
         while (!mStop) {
+            if(iterator > 100000){
+              mStop = true;
+            }
+            iterator+=1;
             int status = recorder.read(audioData, 0, audioData.length);
 
             if (status == AudioRecord.ERROR_INVALID_OPERATION ||

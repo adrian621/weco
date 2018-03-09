@@ -110,10 +110,12 @@ function setUpDB(db) {
     var projectID = sampleInfo.projectID;
     var trackID = sampleInfo.trackID;
     var sample = sampleInfo.name;
+    var page = sampleInfo.page;
+    var ind = sampleInfo.ind;
 
     var dbs = db.db("samples");
 
-    var newSample = {trackID: trackID, name: sample};
+    var newSample = {trackID: trackID, name: sample, page: page, ind: ind};
     //var newSample = {info: "new sample", trackNum: trackID, sampleNum: sampleNum, sampleID: sampleID};
     dbs.collection(projectID).insertOne(newSample, function(err, res) {
       if(err) throw err;
@@ -216,7 +218,7 @@ function setUpDB(db) {
   */
   function removeTrack(db, trackInfo, callback) {
     var projectID = trackInfo.projectID;
-    var trackID = trackInfo.trackID.toString();
+    var trackID = trackInfo.trackID;
     var query = {trackNum: trackID};
     var sampleQuery = {trackID: trackInfo.trackID}
 
