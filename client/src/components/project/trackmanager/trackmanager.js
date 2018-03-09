@@ -132,7 +132,6 @@ export default class TrackManager extends Component {
     let tracks = this.state.tracks;
     tracks[this.state.rTrackInd].sample=smp;
     this.setState({tracks:tracks},()=>{
-      alert("done");
       //This should happen in componentWillUpdate? weird
       this.updateSoundMixer(this.state.tracks);
     });
