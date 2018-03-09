@@ -13,13 +13,15 @@ import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
 import android.os.AsyncTask;
+import android.media.MediaPlayer;
 
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.lang.Math;
-
+import java.io.File;
+import java.io.FileInputStream;
 
 
 public class WecoAudioModule extends ReactContextBaseJavaModule {
@@ -50,7 +52,8 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void playSound(){
-      AsyncTask.execute(sMixer);
+      // AsyncTask.execute(sMixer);
+      sMixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @ReactMethod
@@ -62,11 +65,13 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void stopSound(){
       sMixer.stop();
+      sMixer = new SoundMixer(sMixer);
     }
 
     @ReactMethod
     public void pauseSound(){
       sMixer.pause();
+      sMixer = new SoundMixer(sMixer);
     }
 
     @ReactMethod
@@ -77,7 +82,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
     //Inner class for mixing and playing sounds
     //Can be used with AsyncTask.execute()
-    private class SoundMixer implements Runnable{
+    private class SoundMixer extends AsyncTask {
       private AudioTrack audioTrack;
       private int longestSmpLen;
       private int progress;
@@ -88,7 +93,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       private float bpm;
       private int visibleBars;
       private int maxValue;
-
+      private String storagePath;
       private ArrayList<byte[]> allByteArrays;
 
       public SoundMixer(){
@@ -100,6 +105,26 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         bpm = 0;
         visibleBars = 0;
         maxValue = 0;
+
+        //Get storage path
+        File tmp = getReactApplicationContext().getFilesDir();
+        this.storagePath = tmp.getAbsolutePath();
+      }
+
+      //Clone Constructor
+      public SoundMixer(SoundMixer sMixer){
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+        longestSmpLen = sMixer.longestSmpLen;
+        progress = sMixer.progress;
+        roundedProgress = sMixer.roundedProgress;
+        callback = sMixer.callback;
+        output = sMixer.output;
+        timeMarker = sMixer.timeMarker;
+        bpm = sMixer.bpm;
+        visibleBars = sMixer.visibleBars;
+        maxValue = sMixer.maxValue;
+        storagePath = sMixer.storagePath;
+        allByteArrays = sMixer.allByteArrays;
       }
 
       public void setBPM(float bpm){
@@ -132,11 +157,15 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         allByteArrays =  new ArrayList<byte[]>();
 
         longestSmpLen = 0;
+        File puta;
 
         for(int i = 0; i < tracks.size(); i++){
-          InputStream in =  getReactApplicationContext().getResources().openRawResource(
-          getReactApplicationContext().getResources().getIdentifier(tracks.getString(i),
-          "raw", getReactApplicationContext().getPackageName()));
+          // InputStream in =  getReactApplicationContext().getResources().openRawResource(
+          // getReactApplicationContext().getResources().getIdentifier(tracks.getString(i),
+          // "raw", getReactApplicationContext().getPackageName()));
+
+          puta = new File(this.storagePath+"/"+tracks.getString(i)+".wav");
+          InputStream in = new FileInputStream(puta);
 
           byte[] music = null;
           music = new byte[in.available()];
@@ -203,10 +232,11 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
           output[i] = (byte)((mixed) * 128.0f);
         }
       }
+
       @Override
-      public void run(){
+      protected Object doInBackground(Object... params){
         if(allByteArrays.size() == 0){
-            return;
+            return null;
         }
 
         audioTrack.play();
@@ -216,6 +246,8 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         if(progress+roundedProgress == output.length){
           progress=0;
         }
+
+        return null;
       }
 
       private byte[] convertStreamToByteArray(InputStream is) throws IOException {

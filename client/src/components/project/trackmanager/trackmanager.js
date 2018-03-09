@@ -1,16 +1,25 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { PermissionsAndroid, StyleSheet, Text, View, FlatList } from 'react-native';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
 import TimeLine from './timeline';
-import WecoAudio from '../../../nativemodules';
+import {WecoAudio,WecoRecord} from '../../../nativemodules';
 import { StackNavigator } from 'react-navigation';
+import Permissions from 'react-native-permissions';
 
 export default class TrackManager extends Component {
 
   constructor(props){
     super(props);
+
+    // Request permission to access photos
+
+    Permissions.request('microphone').then(response => {
+      // Returns once the user has chosen to 'allow' or to 'not allow' access
+      // Response is one of: 'authorized', 'denied', 'restricted', or 'undetermined'
+      // alert(response)
+    })
 
     this.state = {
         tracks: [],
@@ -20,13 +29,14 @@ export default class TrackManager extends Component {
         visibleBars: 2,
         bpm: 96,
         playing: false,
+        recording: false,
         trackHeight: 0,
         ntbHeight: 0,
         totalHeight: 0,
-        scrolledTrackID: 0
+        scrolledTrackID: 0,
+        rTrackInd: 0
     };
     WecoAudio.init(this.state.bpm, this.state.visibleBars);
-
     this.socket = this.props.socket;
 
     this.socket.emit('get-project', {id: this.props.projectId});
@@ -118,31 +128,86 @@ export default class TrackManager extends Component {
     WecoAudio.mix(samples);
   }
 
+  stopRecording = (smp) =>{
+    let tracks = this.state.tracks;
+    tracks[this.state.rTrackInd].sample=smp;
+    this.setState({tracks:tracks},()=>{
+      alert("done");
+      //This should happen in componentWillUpdate? weird
+      this.updateSoundMixer(this.state.tracks);
+    });
+    this.props.onRecordingDone();
+  }
+
   play = () =>{
     if(this.state.playing){
       return;
     }
     this.setState({playing: true, stopped: false, paused: false});
 
-    let samples = [];
-
-    for (let track of this.state.tracks){
-      if(track.sample != ""){
-        samples.push(track.sample.split('.')[0]);
-      }
-    }
 
     WecoAudio.playSound();
+  }
+
+  play_2 = () =>{
+    if(this.state.playing){
+      return;
+    }
+    this.setState({playing: true, stopped: false, paused: false});
+
+
+    // WecoAudio.playSound();
   }
 
   stop = () =>{
     this.setState({playing: false, stopped: true});
     WecoAudio.stopSound();
+    if(this.state.recording){
+      this.setState({recording: false}, ()=>{
+        WecoRecord.stopRecording(()=>{
+
+        });
+      })
+    }
+
   }
 
   pause = () =>{
     this.setState({playing: false, paused: true});
     WecoAudio.pauseSound();
+    if(this.state.recording){
+      this.setState({recording: false}, ()=>{
+        WecoRecord.stopRecording(()=>{
+        });
+      })
+    }
+  }
+
+  record = ()=>{
+    this.stop();
+    if(!this.state.recording){
+      // this.stop();
+      // this.play();
+      let tracks=this.state.tracks;
+      tracks[this.state.rTrackInd].sample='';
+      this.setState({tracks:tracks},()=>{
+        this.updateSoundMixer(this.state.tracks);
+      })
+      this.setState({recording:true}, ()=>{
+        if(this.state.tracks.length==0) return;
+        this.play();
+        WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(smp)=>{
+
+          this.stopRecording(smp);
+        });
+      })
+    }
+    else{
+      this.setState({recording:false}, ()=>{
+        WecoRecord.stopRecording(()=>{
+        });
+      })
+    }
   }
 
   addNewTrack = () => {
@@ -245,6 +310,10 @@ export default class TrackManager extends Component {
     WecoAudio.setTimeMarker(val);
   }
 
+  handleRTrack = (index) =>{
+    this.setState({rTrackInd: index});
+  }
+
   render() {
     let tListHeight = 0;
     if(this.state.tracks.length!=0){
@@ -259,7 +328,8 @@ export default class TrackManager extends Component {
     return (
       <View style={styles.container}>
         <View style={styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-          <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
+          <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause} onRecord={this.record}
+            onSelectRTrack={this.handleRTrack} tracks={this.state.tracks} recording={this.state.recording}></SoundControl>
         </View>
         <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
            playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
