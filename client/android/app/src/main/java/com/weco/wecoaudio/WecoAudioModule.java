@@ -113,7 +113,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
       //Clone Constructor
       public SoundMixer(SoundMixer sMixer){
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 44100, AudioTrack.MODE_STREAM);
+        audioTrack = sMixer.audioTrack;
         longestSmpLen = sMixer.longestSmpLen;
         progress = sMixer.progress;
         roundedProgress = sMixer.roundedProgress;
@@ -172,6 +172,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
             else
             {
               //Quick solution. if sample contains 'sample' it is a preset sample in res.raw
+              //else open from /data/
               if(track.getString(i).contains("sample")){
                 in =  getReactApplicationContext().getResources().openRawResource(
                 getReactApplicationContext().getResources().getIdentifier(track.getString(i),
@@ -185,7 +186,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
               byte[] music = null;
               music = new byte[in.available()];
               music = convertStreamToByteArray(in);
-              System.arraycopy(music, 0, c, i*5*44100, music.length);
+              System.arraycopy(music, 0, c, i*5*44100/2, music.length);
               sampleEndInd = i*5*44100+music.length;
               in.close();
             }
@@ -232,6 +233,13 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         }
         audioTrack.stop();
         audioTrack.flush();
+        progress=0;
+      }
+
+      public void reset(){
+        if(allByteArrays.size() == 0){
+            return;
+        }
         progress=0;
       }
 

@@ -343,7 +343,7 @@ export default class TrackManager extends Component {
     }
 
     handlePlayDone = () => {
-      //this.stop();
+      this.stop();
     }
 
     onSwipeLeft = (gestureState) => {
@@ -356,7 +356,7 @@ export default class TrackManager extends Component {
     }
 
 
-    onSwipeRight(gestureState) {
+    onSwipeRight = (gestureState) =>{
       if (this.state.gridPage < 1) {
         return
       }
@@ -385,6 +385,8 @@ export default class TrackManager extends Component {
       this.setState({rTrackInd: index});
     }
 
+
+
     render() {
       let tListHeight = 0;
       if (this.state.tracks.length != 0) {
@@ -408,7 +410,8 @@ export default class TrackManager extends Component {
           </View>
           <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
              playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
-             onSlideComplete={this.handleTimeChange}></TimeLine>
+             onSlideComplete={this.handleTimeChange} onPageLeft={this.onSwipeLeft}
+             onPageRight={this.onSwipeRight}></TimeLine>
           <GestureRecognizer
             onSwipe={(direction, state) => this.onSwipe(direction, state)}
             onSwipeLeft={(state) => this.onSwipeLeft(state)}
