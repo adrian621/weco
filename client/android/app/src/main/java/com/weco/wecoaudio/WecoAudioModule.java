@@ -149,8 +149,8 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
       public void setTimeMarker(float timeMarker){
         progress = (int)Math.round(maxValue*timeMarker);
-        roundedProgress = progress%16;
-        progress = progress-(roundedProgress%16);
+        roundedProgress = progress%8;
+        progress = progress-(roundedProgress%8);
       }
 
 

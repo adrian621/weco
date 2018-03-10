@@ -183,8 +183,10 @@ export default class TrackManager extends Component {
   }
 
   pause = () =>{
-    this.setState({playing: false, paused: true});
-    WecoAudio.pauseSound();
+    this.setState({playing: false, paused: true},()=>{
+      WecoAudio.pauseSound();
+    });
+
     if(this.state.recording){
       this.setState({recording: false}, ()=>{
         WecoRecord.stopRecording(()=>{
