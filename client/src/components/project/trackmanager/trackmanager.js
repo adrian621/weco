@@ -175,7 +175,6 @@ export default class TrackManager extends Component {
     if(this.state.recording){
       this.setState({recording: false}, ()=>{
         WecoRecord.stopRecording(()=>{
-
         });
       })
     }
@@ -203,14 +202,14 @@ export default class TrackManager extends Component {
       this.updateSoundMixer(this.state.tracks);
     })
   }
+
   record = ()=>{
     this.stop();
     if(!this.state.recording){
-
-      // this.clearTrack(this.state.rTrackInd);
+      if(this.state.tracks.length==0) return;
+      this.clearTrack(this.state.rTrackInd);
 
       this.setState({recording:true}, ()=>{
-        if(this.state.tracks.length==0) return;
         this.play();
         WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(smp)=>{
           this.stopRecording(smp);
@@ -240,15 +239,15 @@ export default class TrackManager extends Component {
       WecoAudio.mix(samples);
   }
 
-    stop = () => {
-      this.setState({ playing: false, stopped: true });
-      WecoAudio.stopSound();
-    }
-
-    pause = () => {
-      this.setState({ playing: false, paused: true });
-      WecoAudio.pauseSound();
-    }
+    // stop = () => {
+    //   this.setState({ playing: false, stopped: true, recording:false });
+    //   WecoAudio.stopSound();
+    // }
+    //
+    // pause = () => {
+    //   this.setState({ playing: false, paused: true, recording: false });
+    //   WecoAudio.pauseSound();
+    // }
 
     addNewTrack = () => {
       let tracks = this.state.tracks;

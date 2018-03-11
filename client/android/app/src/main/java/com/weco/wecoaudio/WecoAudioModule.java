@@ -131,14 +131,14 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         this.bpm = bpm;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4*2;
+        maxValue = maxValue*44100*4;
       }
 
       public void setBars(int visibleBars){
         this.visibleBars = visibleBars;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4*2;
+        maxValue = maxValue*44100*4;
       }
 
 
@@ -155,22 +155,31 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
 
       public byte[] concatTrack(ReadableArray track) throws IOException{
+        if(track.size()==0){
+          return null;
+        }
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
 
-        byte [] c = new byte[44100*4*15];
+        byte [] c = new byte[this.maxValue];
         int sampleEndInd = 0;
 
         byte [] emptySample = new byte[44100*5];
         File puta;
         InputStream in;
+        int offset=0;
+
         for(int i = 0; i < track.size(); i++){
+            offset = 0;
+
             if (track.getString(i).equals("")){
-              if(i >= sampleEndInd) {
-                  System.arraycopy(emptySample, 0, c, i*5*44100, emptySample.length);
-              }
+              // if(i >= sampleEndInd) {
+              //     System.arraycopy(emptySample, 0, c, i*5*44100, emptySample.length);
+              // }
             }
             else
             {
+
               //Quick solution. if sample contains 'sample' it is a preset sample in res.raw
               //else open from /data/
               if(track.getString(i).contains("sample")){
@@ -186,13 +195,19 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
               byte[] music = null;
               music = new byte[in.available()];
               music = convertStreamToByteArray(in);
-              System.arraycopy(music, 0, c, i*5*44100/2, music.length);
-              sampleEndInd = i*5*44100+music.length;
+
+              //calculate offset if sample exceeds output length
+              if(i*5*44100/2+music.length >= this.maxValue){
+                offset = i*5*44100/2+music.length - this.maxValue;
+              }
+
+              System.arraycopy(music, 0, c, i*5*44100/2, music.length-offset);
+              sampleEndInd = i*5*44100/2+music.length;
               in.close();
             }
           }
         //output = c;
-        output = new byte[c.length];
+        output = new byte[this.maxValue];
         return(c);
       }
 
@@ -201,7 +216,9 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
         for(int i=0; i<tracks.size(); i++) {
           byte [] track = concatTrack(tracks.getArray(i));
-          allByteArrays.add(track);
+          if(track!=null){
+            allByteArrays.add(track);
+          }
         }
 
         for(int i=0; i < output.length; i++){
