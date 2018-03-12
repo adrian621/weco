@@ -131,4 +131,11 @@ io.on('connection', function (socket) {
       socket.emit('num-of-tracks', {number: val})
     });
   });
+
+  socket.on('new-recorded-sample', (data) => {
+    console.log(data.buffer_size+" was sent!!!!");
+    socket.broadcast.to(data.projectID).emit('get-new-recorded-sample', { data: data.audioData, buffer_size: data.buffer_size, projectId: data.projectId });
+    socket.emit('get-new-recorded-sample', { data: data.audioData, buffer_size: data.buffer_size, projectId: data.projectId });
+  });
+
 });
