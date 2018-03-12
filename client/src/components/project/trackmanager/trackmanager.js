@@ -48,6 +48,7 @@ export default class TrackManager extends Component {
 
     this.socket.on('on-connect-samples', (res) => {
       let tracks = this.state.tracks;
+
       for (let i = 0; i < res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
@@ -56,15 +57,14 @@ export default class TrackManager extends Component {
 
         for (let i = 0; i < tracks.length; i++) {
           if (tracks[i].trackId == trackID) {
-            tracks[i].sample = sample;
-            //updated_tracks[i].samples[page][ind] = sampleName;
             tracks[i].samples[page][ind] = sample;
-            //tracks[i].page= page;
-            //tracks[i].samples = samples;
           }
         }
       }
-      this.setState({ tracks: tracks });
+
+      this.setState({ tracks: tracks }, () => {
+        this.updateSoundMixer(this.state.tracks);
+      });
     });
 
     this.socket.on('get-new-track', (res) => {
@@ -82,7 +82,9 @@ export default class TrackManager extends Component {
       for (let i = 0; i < updated_tracks.length; i++) {
         if (updated_tracks[i].trackId == trackID) {
           tracks.splice(i, 1);
-          this.setState({ tracks: updated_tracks });
+          this.setState({ tracks: updated_tracks }, () => {
+            this.updateSoundMixer(this.state.tracks);
+          });
         }
       }
     });
@@ -152,43 +154,26 @@ export default class TrackManager extends Component {
     console.log(samples);
       WecoAudio.mix(samples);
     }
-    /*
-      updateSoundMixer = (tracks) =>{
-        let samples = [];
-    
-        for (let track of tracks){
-          if(track.sample != ""){
-            samples.push(track.sample.split('.')[0]);
-          }
-        }
-        WecoAudio.mix(samples);
-      }
-    */
+
     play = () => {
       if (this.state.playing) {
         return;
       }
-      this.setState({ playing: true, stopped: false, paused: false });
-
-      let samples = [];
-
-      for (let track of this.state.tracks) {
-        if (track.sample != "") {
-          samples.push(track.sample.split('.')[0]);
-        }
-      }
-
-      WecoAudio.playSound();
+      this.setState({ playing: true, stopped: false, paused: false }, () => {
+        WecoAudio.playSound();
+      });
     }
 
     stop = () => {
-      this.setState({ playing: false, stopped: true });
-      WecoAudio.stopSound();
+      this.setState({ playing: false, stopped: true }, () => {
+        WecoAudio.stopSound();
+      });
     }
 
     pause = () => {
-      this.setState({ playing: false, paused: true });
-      WecoAudio.pauseSound();
+      this.setState({ playing: false, paused: true }, () => {
+        WecoAudio.pauseSound();
+      });
     }
 
     addNewTrack = () => {
