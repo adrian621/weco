@@ -5,7 +5,7 @@ import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
 import TimeLine from './timeline';
-import {WecoAudio,WecoRecord} from '../../../nativemodules';
+import {WecoAudio,WecoRecord,WecoTools} from '../../../nativemodules';
 import { StackNavigator } from 'react-navigation';
 import Permissions from 'react-native-permissions';
 
@@ -86,7 +86,6 @@ export default class TrackManager extends Component {
     });
 
     this.socket.on('get-del-track', (res) => {
-
       let updated_tracks = this.state.tracks;
       let trackID = res;
       for (let i = 0; i < updated_tracks.length; i++) {
@@ -111,6 +110,10 @@ export default class TrackManager extends Component {
         }
       }
       this.setState({ tracks: updated_tracks });
+    });
+
+    this.socket.on('get-new-recorded-sample', (data) => {
+      alert(data.buffer_size);
     });
   }
 
@@ -211,8 +214,10 @@ export default class TrackManager extends Component {
 
       this.setState({recording:true}, ()=>{
         this.play();
-        WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(smp)=>{
-          this.stopRecording(smp);
+        WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(fileName, audioData, buffer_size)=>{
+          // this.socket.emit('new-recorded-sample', { audioData: audioData, buffer_size: buffer_size, projectId: this.props.projectId, fileName: fileName});
+          WecoTools.decodeSample(audioData, buffer_size, fileName);
+          this.stopRecording(fileName);
         });
       })
     }

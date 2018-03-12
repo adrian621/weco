@@ -6,6 +6,8 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableNativeArray;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -14,12 +16,14 @@ import android.media.AudioFormat;
 import android.media.MediaRecorder;
 import android.media.MediaRecorder.AudioSource;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.BufferedOutputStream;
+import java.util.ArrayList;
 
 public class WecoRecordingModule extends ReactContextBaseJavaModule {
     private AudioRecorder audioRecorder;
@@ -93,10 +97,14 @@ public class WecoRecordingModule extends ReactContextBaseJavaModule {
         while(new File(filePath).isFile()){
           fileIndex+=1;
           fullFileName = fileName+"_"+Integer.toString(fileIndex)+".wav";
-          filePath = storagePath+"/"+fullFileName;;
+          filePath = storagePath+"/"+fullFileName;
         }
 
-        byte audioData[] = new byte[BUFFER_SIZE];
+        byte[] audioData = new byte[BUFFER_SIZE];
+        int[] intData = new int[BUFFER_SIZE];
+        
+        WritableArray allData_ = new WritableNativeArray();
+
         AudioRecord recorder = new AudioRecord(AUDIO_SOURCE,
                     SAMPLING_RATE, CHANNEL_IN_CONFIG,
                     AUDIO_FORMAT, BUFFER_SIZE);
@@ -110,6 +118,8 @@ public class WecoRecordingModule extends ReactContextBaseJavaModule {
         }
 
         while (!mStop) {
+            WritableArray sampleArr = new WritableNativeArray();
+
             if(iterator > 100000){
               mStop = true;
             }
@@ -123,6 +133,12 @@ public class WecoRecordingModule extends ReactContextBaseJavaModule {
 
             try {
                 os.write(audioData, 0, audioData.length);
+
+                //Cast audioData to int for callback.
+                for(byte b : audioData)
+                  sampleArr.pushInt((int)b);
+
+                allData_.pushArray(sampleArr);
             } catch (IOException e) {
                 return null;
             }
@@ -133,8 +149,8 @@ public class WecoRecordingModule extends ReactContextBaseJavaModule {
             recorder.stop();
             recorder.release();
             mStop = false;
-            cb.invoke(fullFileName);
 
+            cb.invoke(fullFileName, allData_, BUFFER_SIZE);
         } catch (IOException e) {
         }
         return null;

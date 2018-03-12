@@ -8,4 +8,6 @@
  */
 import {NativeModules} from 'react-native';
 module.exports = {WecoAudio: NativeModules.WecoAudio,
-  WecoRecord: NativeModules.WecoRecord};
+                  WecoRecord: NativeModules.WecoRecord,
+                  WecoTools: NativeModules.WecoTools
+                  };
