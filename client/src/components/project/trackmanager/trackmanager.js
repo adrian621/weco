@@ -1,21 +1,32 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { PermissionsAndroid, StyleSheet, Text, View, FlatList } from 'react-native';
 import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 import Track from './track';
 import NewTrackButton from './newTrackButton';
 import SoundControl from './soundControl';
 import TimeLine from './timeline';
-import WecoAudio from '../../../nativemodules';
+import {WecoAudio,WecoRecord} from '../../../nativemodules';
 import { StackNavigator } from 'react-navigation';
+import Permissions from 'react-native-permissions';
 
 export default class TrackManager extends Component {
 
   constructor(props) {
     super(props);
 
+    // Request permission to access photos
+
+    Permissions.request('microphone').then(response => {
+      // Returns once the user has chosen to 'allow' or to 'not allow' access
+      // Response is one of: 'authorized', 'denied', 'restricted', or 'undetermined'
+      // alert(response)
+    })
+
     this.state = {
       gestureName: 'none',
       tracks: [],
+      rTrackInd: 0,
+      recording: false,
       sampleDropped: {},
       scrollOffset: 0,
       offsetY: 0,
@@ -32,7 +43,6 @@ export default class TrackManager extends Component {
     };
 
     WecoAudio.init(this.state.bpm, this.state.visibleBars);
-
     this.socket = this.props.socket;
 
     this.socket.emit('get-project', { id: this.props.projectId });
@@ -136,60 +146,108 @@ export default class TrackManager extends Component {
     this.setState({ tracks: tracks }, () => {this.updateSoundMixer(this.state.tracks)});
   }
 
+  stopRecording = (smp) =>{
+    let tracks = this.state.tracks;
+    let smps = tracks[this.state.rTrackInd].samples;
+    smps[0][0] = smp;
+    tracks[this.state.rTrackInd].samples = smps;
+
+    this.setState({tracks:tracks},()=>{
+      //This should happen in componentWillUpdate? weird
+      this.updateSoundMixer(this.state.tracks);
+    });
+    this.props.onRecordingDone();
+  }
+
+  play = () =>{
+    if(this.state.playing){
+      return;
+    }
+    this.setState({playing: true, stopped: false, paused: false});
+
+
+    WecoAudio.playSound();
+  }
+
+  stop = () =>{
+    this.setState({playing: false, stopped: true});
+    WecoAudio.stopSound();
+    if(this.state.recording){
+      this.setState({recording: false}, ()=>{
+        WecoRecord.stopRecording(()=>{
+        });
+      })
+    }
+
+  }
+
+  pause = () =>{
+    this.setState({playing: false, paused: true},()=>{
+      WecoAudio.pauseSound();
+    });
+
+    if(this.state.recording){
+      this.setState({recording: false}, ()=>{
+        WecoRecord.stopRecording(()=>{
+        });
+      })
+    }
+  }
+
+  clearTrack = (ind) =>{
+    //Clear samples of track. temporary solution
+    let tracks=this.state.tracks;
+    tracks[ind].samples=[['', '', '', ''], ['', '', '', '']];
+    this.setState({tracks:tracks},()=>{
+      this.updateSoundMixer(this.state.tracks);
+    })
+  }
+
+  record = ()=>{
+    this.stop();
+    if(!this.state.recording){
+      if(this.state.tracks.length==0) return;
+      this.clearTrack(this.state.rTrackInd);
+
+      this.setState({recording:true}, ()=>{
+        this.play();
+        WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(smp)=>{
+          this.stopRecording(smp);
+        });
+      })
+    }
+    else{
+      this.setState({recording:false}, ()=>{
+        WecoRecord.stopRecording(()=>{
+        });
+      })
+    }
+  }
 
   updateSoundMixer = (tracks) => {
     let samples = [];
     for (let track of tracks) {
       let pages = track.samples;
       let trackSamples = [];
-      for (let page of pages) { 
-        for(let sample of page){      
+      for (let page of pages) {
+        for(let sample of page){
           trackSamples.push(sample.split('.')[0]);
         }
       }
       samples.push(trackSamples);
     }
-    console.log(samples);
       WecoAudio.mix(samples);
-    }
-    /*
-      updateSoundMixer = (tracks) =>{
-        let samples = [];
-    
-        for (let track of tracks){
-          if(track.sample != ""){
-            samples.push(track.sample.split('.')[0]);
-          }
-        }
-        WecoAudio.mix(samples);
-      }
-    */
-    play = () => {
-      if (this.state.playing) {
-        return;
-      }
-      this.setState({ playing: true, stopped: false, paused: false });
+  }
 
-      let samples = [];
-
-      for (let track of this.state.tracks) {
-        if (track.sample != "") {
-          samples.push(track.sample.split('.')[0]);
-        }
-      }
-
-      WecoAudio.playSound();
-    }
-
-    stop = () => {
-      this.setState({ playing: false, stopped: true });
-      WecoAudio.stopSound();
-    }
-
-    pause = () => {
-      this.setState({ playing: false, paused: true });
-      WecoAudio.pauseSound();
-    }
+    // stop = () => {
+    //   this.setState({ playing: false, stopped: true, recording:false });
+    //   WecoAudio.stopSound();
+    // }
+    //
+    // pause = () => {
+    //   this.setState({ playing: false, paused: true, recording: false });
+    //   WecoAudio.pauseSound();
+    // }
 
     addNewTrack = () => {
       let tracks = this.state.tracks;
@@ -286,7 +344,7 @@ export default class TrackManager extends Component {
     }
 
     handlePlayDone = () => {
-      //this.stop();
+      this.stop();
     }
 
     onSwipeLeft = (gestureState) => {
@@ -298,7 +356,8 @@ export default class TrackManager extends Component {
       this.setState({ gridPage: new_page });
     }
 
-    onSwipeRight(gestureState) {
+
+    onSwipeRight = (gestureState) =>{
       if (this.state.gridPage < 1) {
         return
       }
@@ -323,6 +382,12 @@ export default class TrackManager extends Component {
       WecoAudio.setTimeMarker(val);
     }
 
+    handleRTrack = (index) =>{
+      this.setState({rTrackInd: index});
+    }
+
+
+
     render() {
       let tListHeight = 0;
       if (this.state.tracks.length != 0) {
@@ -341,11 +406,13 @@ export default class TrackManager extends Component {
       return (
         <View style={styles.container}>
           <View style={styles.SoundControlContainer} onLayout={this.handleSCLayout}>
-            <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause}></SoundControl>
+            <SoundControl onPlay={this.play} onStop={this.stop} onPause={this.pause} onRecord={this.record}
+              onSelectRTrack={this.handleRTrack} tracks={this.state.tracks} recording={this.state.recording}></SoundControl>
           </View>
           <TimeLine playing={this.state.playing} stopped={this.state.stopped} paused={this.state.paused}
-            playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
-            onSlideComplete={this.handleTimeChange}></TimeLine>
+             playDone={this.handlePlayDone} bpm={this.state.bpm} bars={this.state.visibleBars}
+             onSlideComplete={this.handleTimeChange} onPageLeft={this.onSwipeLeft}
+             onPageRight={this.onSwipeRight}></TimeLine>
           <GestureRecognizer
             onSwipe={(direction, state) => this.onSwipe(direction, state)}
             onSwipeLeft={(state) => this.onSwipeLeft(state)}

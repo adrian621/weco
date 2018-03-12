@@ -8,7 +8,15 @@ let RNFS = require('react-native-fs')
 export default class SampleBrowser extends Component {
   constructor(props){
     super(props);
+    // this.clear_files();
     this.state = {files: [], yOffset: 0}
+  }
+
+  componentWillReceiveProps(nextProps){
+    //Scope of trackmanager changed
+    if(nextProps.updateSoundLibrary != this.props.updateSoundLibrary){
+      this.read_files();
+    }
   }
 
   componentDidMount(){

@@ -28,7 +28,8 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
             new RNSoundPackage(),
             new RNFSPackage(),
-            new WecoAudioPackage()
+            new WecoAudioPackage(),
+            new WecoRecordingPackage()
       );
     }
 

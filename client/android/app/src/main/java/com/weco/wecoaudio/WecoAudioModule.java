@@ -13,13 +13,15 @@ import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
 import android.os.AsyncTask;
+import android.media.MediaPlayer;
 
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.lang.Math;
-
+import java.io.File;
+import java.io.FileInputStream;
 
 
 public class WecoAudioModule extends ReactContextBaseJavaModule {
@@ -50,7 +52,8 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void playSound(){
-      AsyncTask.execute(sMixer);
+      // AsyncTask.execute(sMixer);
+      sMixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @ReactMethod
@@ -62,11 +65,13 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void stopSound(){
       sMixer.stop();
+      sMixer = new SoundMixer(sMixer);
     }
 
     @ReactMethod
     public void pauseSound(){
       sMixer.pause();
+      sMixer = new SoundMixer(sMixer);
     }
 
     @ReactMethod
@@ -77,7 +82,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
     //Inner class for mixing and playing sounds
     //Can be used with AsyncTask.execute()
-    private class SoundMixer implements Runnable{
+    private class SoundMixer extends AsyncTask {
       private AudioTrack audioTrack;
       private int longestSmpLen;
       private int progress;
@@ -88,7 +93,7 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       private float bpm;
       private int visibleBars;
       private int maxValue;
-
+      private String storagePath;
       private ArrayList<byte[]> allByteArrays;
 
       public SoundMixer(){
@@ -100,20 +105,40 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         bpm = 0;
         visibleBars = 0;
         maxValue = 0;
+
+        //Get storage path
+        File tmp = getReactApplicationContext().getFilesDir();
+        this.storagePath = tmp.getAbsolutePath();
+      }
+
+      //Clone Constructor
+      public SoundMixer(SoundMixer sMixer){
+        audioTrack = sMixer.audioTrack;
+        longestSmpLen = sMixer.longestSmpLen;
+        progress = sMixer.progress;
+        roundedProgress = sMixer.roundedProgress;
+        callback = sMixer.callback;
+        output = sMixer.output;
+        timeMarker = sMixer.timeMarker;
+        bpm = sMixer.bpm;
+        visibleBars = sMixer.visibleBars;
+        maxValue = sMixer.maxValue;
+        storagePath = sMixer.storagePath;
+        allByteArrays = sMixer.allByteArrays;
       }
 
       public void setBPM(float bpm){
         this.bpm = bpm;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4*2;
+        maxValue = maxValue*44100*4;
       }
 
       public void setBars(int visibleBars){
         this.visibleBars = visibleBars;
         maxValue = (int)((4*this.visibleBars/this.bpm)*60);
         //Not sure why necessary to multiply by 4 here, but it works! need to investigate further
-        maxValue = maxValue*44100*4*2;
+        maxValue = maxValue*44100*4;
       }
 
 
@@ -124,49 +149,76 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
 
       public void setTimeMarker(float timeMarker){
         progress = (int)Math.round(maxValue*timeMarker);
-        roundedProgress = progress%16;
-        progress = progress-(roundedProgress%16);
+        roundedProgress = progress%8;
+        progress = progress-(roundedProgress%8);
       }
 
 
-     public byte[] concatTrack(ReadableArray track) throws IOException{
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+      public byte[] concatTrack(ReadableArray track) throws IOException{
+        if(track.size()==0){
+          return null;
+        }
 
-      byte [] c = new byte[44100*4*15];
-      int sampleEndInd = 0;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
 
-      byte [] emptySample = new byte[44100*5];
+        byte [] c = new byte[this.maxValue];
+        int sampleEndInd = 0;
 
-      for(int i = 0; i < track.size(); i++){
-          if (track.getString(i).equals("")){
-            if(i >= sampleEndInd) {
-                System.arraycopy(emptySample, 0, c, i*5*44100, emptySample.length);
+        byte [] emptySample = new byte[44100*5];
+        File puta;
+        InputStream in;
+        int offset=0;
+
+        for(int i = 0; i < track.size(); i++){
+            offset = 0;
+
+            if (track.getString(i).equals("")){
+              // if(i >= sampleEndInd) {
+              //     System.arraycopy(emptySample, 0, c, i*5*44100, emptySample.length);
+              // }
+            }
+            else
+            {
+
+              //Quick solution. if sample contains 'sample' it is a preset sample in res.raw
+              //else open from /data/
+              if(track.getString(i).contains("sample")){
+                in =  getReactApplicationContext().getResources().openRawResource(
+                getReactApplicationContext().getResources().getIdentifier(track.getString(i),
+                "raw", getReactApplicationContext().getPackageName()));
+              }
+              else{
+                puta = new File(this.storagePath+"/"+track.getString(i)+".wav");
+                in = new FileInputStream(puta);
+              }
+
+              byte[] music = null;
+              music = new byte[in.available()];
+              music = convertStreamToByteArray(in);
+
+              //calculate offset if sample exceeds output length
+              if(i*5*44100/2+music.length >= this.maxValue){
+                offset = i*5*44100/2+music.length - this.maxValue;
+              }
+
+              System.arraycopy(music, 0, c, i*5*44100/2, music.length-offset);
+              sampleEndInd = i*5*44100/2+music.length;
+              in.close();
             }
           }
-          else
-          {
-            InputStream in =  getReactApplicationContext().getResources().openRawResource(
-            getReactApplicationContext().getResources().getIdentifier(track.getString(i),
-            "raw", getReactApplicationContext().getPackageName()));
-            byte[] music = null;
-            music = new byte[in.available()];
-            music = convertStreamToByteArray(in);
-            System.arraycopy(music, 0, c, i*5*44100, music.length);
-            sampleEndInd = i*5*44100+music.length;
-            in.close();
-          }
-        }
-      //output = c;
-      output = new byte[c.length];
-      return(c);
-     }
+        //output = c;
+        output = new byte[this.maxValue];
+        return(c);
+      }
 
       public void loadBytes(ReadableArray tracks) throws IOException{
        allByteArrays =  new ArrayList<byte[]>();
 
         for(int i=0; i<tracks.size(); i++) {
           byte [] track = concatTrack(tracks.getArray(i));
-          allByteArrays.add(track);
+          if(track!=null){
+            allByteArrays.add(track);
+          }
         }
 
         for(int i=0; i < output.length; i++){
@@ -201,6 +253,13 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         progress=0;
       }
 
+      public void reset(){
+        if(allByteArrays.size() == 0){
+            return;
+        }
+        progress=0;
+      }
+
       public void pause(){
         if(allByteArrays.size() == 0){
             return;
@@ -221,7 +280,11 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
       }
 
       @Override
-      public void run(){
+      protected Object doInBackground(Object... params){
+        if(allByteArrays.size() == 0){
+            return null;
+        }
+
         audioTrack.play();
         int prevProgress = progress;
         progress = (audioTrack.write(output, prevProgress, output.length-prevProgress))+prevProgress;
@@ -229,6 +292,8 @@ public class WecoAudioModule extends ReactContextBaseJavaModule {
         if(progress+roundedProgress == output.length){
           progress=0;
         }
+
+        return null;
       }
 
       private byte[] convertStreamToByteArray(InputStream is) throws IOException {
