@@ -11,6 +11,13 @@ export default class SampleBrowser extends Component {
     this.state = {files: [], yOffset: -75}
   }
 
+  componentWillReceiveProps(nextProps){
+    //Scope of trackmanager changed
+    if(nextProps.updateSoundLibrary != this.props.updateSoundLibrary){
+      this.read_files();
+    }
+  }
+
   componentDidMount(){
     //this.clear_files();
     this.write_dummy_samples();

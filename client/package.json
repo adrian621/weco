@@ -10,6 +10,7 @@
     "react": "16.2.0",
     "react-native": "0.52.1",
     "react-native-fs": "^2.9.7",
+    "react-native-permissions": "^1.1.1",
     "react-native-socketio": "^0.3.0",
     "react-native-sound": "0.10.4",
     "react-navigation": "^1.1.2",

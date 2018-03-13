@@ -11,6 +11,7 @@ export default class TimeLine extends Component {
       time: 0,
       stopped: false,
       paused: false,
+      flipped: false,
       sliderBusy: false,
       maxValue: 0,
       pointsMeasured: false
@@ -57,12 +58,20 @@ export default class TimeLine extends Component {
       this.setState({time: prevTime+(Date.now()-start)},()=>{
         if(this.state.stopped || this.state.time>=this.state.maxValue){
           clearInterval(timer);
-          this.setState({time: 0})
+          this.setState({time: 0, flipped: false})
           this.props.onSlideComplete(0);
           this.props.playDone();
+          this.props.onPageRight();
         }
         if(this.state.paused){
           clearInterval(timer);
+        }
+
+        //Temporary solution. make it scalable to other number of bars!
+        if(this.state.time/this.state.maxValue>=0.5 && !this.state.flipped && this.state.time>0){
+          this.setState({flipped: true}, ()=>{
+            this.props.onPageLeft();
+          })
         }
       });
     }, 1);

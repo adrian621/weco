@@ -7,4 +7,5 @@
  *    ToastExample.LONG
  */
 import {NativeModules} from 'react-native';
-module.exports = NativeModules.WecoAudio;
+module.exports = {WecoAudio: NativeModules.WecoAudio,
+  WecoRecord: NativeModules.WecoRecord};

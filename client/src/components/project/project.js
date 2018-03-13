@@ -23,7 +23,8 @@ export default class App extends React.Component {
           movingsample: '',
           sampleDroppedAt: [],
           sampleBrowserWidth: 0,
-          projectId: this.props.navigation.state.params.id
+          projectId: this.props.navigation.state.params.id,
+          updateSoundLibrary: 0
       };
 
       this.socket = this.props.navigation.state.params.socket;
@@ -95,6 +96,10 @@ export default class App extends React.Component {
     this.setState({sampleBrowserWidth: event.nativeEvent.layout.width})
   }
 
+  handleUpdatedSamples = ()=>{
+    this.setState({updateSoundLibrary: this.state.updateSoundLibrary+1});
+  }
+
   render() {
 
     return (
@@ -102,13 +107,14 @@ export default class App extends React.Component {
 
         <View style={{flex: 2}} onLayout={this.handleLayout}>
           <SampleBrowser onRelease={this.handleSampleDrop} onSampleMove={this.handleSampleMove}
-            onFilesLoaded={this.handleFilesLoaded} projectId={this.state.projectId}></SampleBrowser>
+            onFilesLoaded={this.handleFilesLoaded} updateSoundLibrary={this.state.updateSoundLibrary}
+            projectId={this.state.projectId}></SampleBrowser>
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>
             <TrackManager socket={this.socket} offsetX={this.state.sampleBrowserWidth}
               files={this.state.files} sampleDroppedAt={this.state.sampleDroppedAt}
-              projectId={this.state.projectId}></TrackManager>
+              projectId={this.state.projectId} onRecordingDone={this.handleUpdatedSamples}></TrackManager>
         </View>
         {this.display_movingsample()}
       </View>
