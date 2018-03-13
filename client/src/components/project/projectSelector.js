@@ -24,7 +24,7 @@ export default class ProjectSelector extends React.Component {
 
       this.socket.on('new-project', (res) => {
         let projects = this.state.projects;
-
+        alert("EY")
         projects.push({key: res});
         this.setState({projects: projects});
       });

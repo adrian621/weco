@@ -214,9 +214,12 @@ export default class TrackManager extends Component {
 
       this.setState({recording:true}, ()=>{
         this.play();
-        WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(fileName, audioData, buffer_size)=>{
+        WecoRecord.startRecording(this.state.tracks[this.state.rTrackInd].trackId,(filePath, fileName)=>{
           // this.socket.emit('new-recorded-sample', { audioData: audioData, buffer_size: buffer_size, projectId: this.props.projectId, fileName: fileName});
-          WecoTools.decodeSample(audioData, buffer_size, fileName);
+          // WecoTools.decodeSample(audioData, buffer_size, fileName);
+          WecoTools.encodeSample(filePath, fileName, (data, fileName)=>{
+            WecoTools.decodez(data, fileName);
+          });
           this.stopRecording(fileName);
         });
       })
@@ -259,7 +262,8 @@ export default class TrackManager extends Component {
       //let trackId = tracks.length;
       let trackId = Math.floor(Math.random() * 1000000000) + 1;
 
-      tracks.push({ key: trackId, trackId: trackId, page: this.state.gridPage, samples: [['', '', '', ''], ['', '', '', '']], sample: '', y: -1, width: -1, height: -1 });
+      tracks.push({ key: trackId, trackId: trackId, page: this.state.gridPage, samples: [['', '', '', ''], ['', '', '', '']],
+       sample: '', y: -1, width: -1, height: -1 });
 
       this.setState({ tracks: tracks }, () => {
         this.socket.emit('new-track', { trackID: trackId, projectID: this.props.projectId });
