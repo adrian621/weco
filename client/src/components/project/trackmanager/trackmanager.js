@@ -58,6 +58,7 @@ export default class TrackManager extends Component {
 
     this.socket.on('on-connect-samples', (res) => {
       let tracks = this.state.tracks;
+
       for (let i = 0; i < res.length; i++) {
         let trackID = res[i].trackID;
         let sample = res[i].name;
@@ -66,15 +67,14 @@ export default class TrackManager extends Component {
 
         for (let i = 0; i < tracks.length; i++) {
           if (tracks[i].trackId == trackID) {
-            tracks[i].sample = sample;
-            //updated_tracks[i].samples[page][ind] = sampleName;
             tracks[i].samples[page][ind] = sample;
-            //tracks[i].page= page;
-            //tracks[i].samples = samples;
           }
         }
       }
-      this.setState({ tracks: tracks });
+
+      this.setState({ tracks: tracks }, () => {
+        this.updateSoundMixer(this.state.tracks);
+      });
     });
 
     this.socket.on('get-new-track', (res) => {
@@ -92,7 +92,9 @@ export default class TrackManager extends Component {
       for (let i = 0; i < updated_tracks.length; i++) {
         if (updated_tracks[i].trackId == trackID) {
           tracks.splice(i, 1);
-          this.setState({ tracks: updated_tracks });
+          this.setState({ tracks: updated_tracks }, () => {
+            this.updateSoundMixer(this.state.tracks);
+          });
         }
       }
     });
@@ -237,17 +239,7 @@ export default class TrackManager extends Component {
       samples.push(trackSamples);
     }
       WecoAudio.mix(samples);
-  }
-
-    // stop = () => {
-    //   this.setState({ playing: false, stopped: true, recording:false });
-    //   WecoAudio.stopSound();
-    // }
-    //
-    // pause = () => {
-    //   this.setState({ playing: false, paused: true, recording: false });
-    //   WecoAudio.pauseSound();
-    // }
+    }
 
     addNewTrack = () => {
       let tracks = this.state.tracks;

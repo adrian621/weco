@@ -107,7 +107,8 @@ export default class App extends React.Component {
 
         <View style={{flex: 2}} onLayout={this.handleLayout}>
           <SampleBrowser onRelease={this.handleSampleDrop} onSampleMove={this.handleSampleMove}
-            onFilesLoaded={this.handleFilesLoaded} updateSoundLibrary={this.state.updateSoundLibrary}></SampleBrowser>
+            onFilesLoaded={this.handleFilesLoaded} updateSoundLibrary={this.state.updateSoundLibrary}
+            projectId={this.state.projectId}></SampleBrowser>
         </View>
         <View style = {{flex: 0.01, backgroundColor: 'black'}}/>
           <View style = {{flex: 7}}>

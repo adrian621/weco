@@ -8,8 +8,7 @@ let RNFS = require('react-native-fs')
 export default class SampleBrowser extends Component {
   constructor(props){
     super(props);
-    // this.clear_files();
-    this.state = {files: [], yOffset: 0}
+    this.state = {files: [], yOffset: -75}
   }
 
   componentWillReceiveProps(nextProps){
@@ -85,7 +84,7 @@ export default class SampleBrowser extends Component {
       });
   }
 
-  displaySample = (item) =>{
+  displaySample = (item) => {
     return <SampleBox index={item.index} onRelease={()=>{this.props.onRelease}} onMove={this.handleSampleMove} name={item.key}></SampleBox>;
   }
 
@@ -107,6 +106,9 @@ export default class SampleBrowser extends Component {
     //let samples = this.display_samples();
     return (
       <View style={styles.container}>
+        <View style={styles.projectInfo}>
+          <Text style={styles.text}>{this.props.projectId}</Text>
+        </View>
         <FlatList
           style={styles.list}
           data={this.state.files}
@@ -126,6 +128,24 @@ const styles = StyleSheet.create({
     borderRightWidth:0,
     borderColor: 'black',
   },
+
   list: {
+  },
+
+  projectInfo: {
+    height: '10%',
+    width: '100%',
+    backgroundColor: 'rgb(195, 201, 204)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.5,
+    borderRightWidth: 0,
+    borderColor: 'black',
+    marginBottom: 10,
+  },
+
+  text: {
+    textAlign: 'center',
+    fontWeight: 'bold',
   }
 });
